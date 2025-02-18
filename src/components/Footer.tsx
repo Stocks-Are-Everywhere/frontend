@@ -38,7 +38,7 @@ const Footer: React.FC = () => {
             <CompanyDetail>사업자등록번호 123-45-67890</CompanyDetail>
             <CompanyDetail>서울특별시 강남구 테헤란로</CompanyDetail>
           </CompanyInfo>
-          <Copyright>© 2024 Mock Investment. All rights reserved.</Copyright>
+          <Copyright>© 2025 Mock Investment. All rights reserved.</Copyright>
         </FooterBottom>
       </FooterContent>
     </FooterContainer>
