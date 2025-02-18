@@ -39,11 +39,11 @@ const OrderBook: React.FC = () => {
 
   // 현재가 계산 함수
   const calculateCurrentPrice = (data: OrderBookData) => {
-    if (data.askLevels.length === 0 || data.bidLevels.length === 0) return null;
+    if (data.sellLevels.length === 0 || data.buyLevels.length === 0) return null;
 
     // 최우선 매도/매수 호가의 중간값을 현재가로 설정
-    const bestAskPrice = data.askLevels[data.askLevels.length - 1].price; // 가장 낮은 매도가
-    const bestBidPrice = data.bidLevels[0].price; // 가장 높은 매수가
+    const bestAskPrice = data.sellLevels[data.sellLevels.length - 1].price; // 가장 낮은 매도가
+    const bestBidPrice = data.buyLevels[0].price; // 가장 높은 매수가
     return Math.floor((bestAskPrice + bestBidPrice) / 2);
   };
 
@@ -112,8 +112,8 @@ const OrderBook: React.FC = () => {
 
       <OrderBookWrapper>
         <AskLevels>
-          {orderBook.askLevels.map((level, index) => {
-            const prevLevel = prevOrderBook.current?.askLevels[index];
+          {orderBook.sellLevels.map((level, index) => {
+            const prevLevel = prevOrderBook.current?.sellLevels[index];
             const priceChange = getPriceChange(level, prevLevel);
             const quantityChange = getQuantityChange(level, prevLevel);
 
@@ -191,8 +191,8 @@ const OrderBook: React.FC = () => {
         <Divider />
 
         <BidLevels>
-          {orderBook.bidLevels.map((level, index) => {
-            const prevLevel = prevOrderBook.current?.bidLevels[index];
+          {orderBook.buyLevels.map((level, index) => {
+            const prevLevel = prevOrderBook.current?.buyLevels[index];
             const priceChange = getPriceChange(level, prevLevel);
             const quantityChange = getQuantityChange(level, prevLevel);
 
