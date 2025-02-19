@@ -20,7 +20,7 @@ const CustomOrderBook: React.FC = () => {
   const handleSubmit = async () => {
     const orderRequest: OrderRequest = {
       companyCode: 'COMP002',
-      type: side, // 이미 OrderSide가 'BUY' 또는 'SELL'로 되어 있음
+      type: side,
       quantity,
       price: priceType === 'limit' ? price : 0,
       userId: 1,
@@ -30,6 +30,10 @@ const CustomOrderBook: React.FC = () => {
       await submitOrder(orderRequest);
       setSuccessMessage('주문이 성공적으로 제출되었습니다.');
       setErrorMessage(null);
+      // 2초 후에 성공 메시지를 숨깁니다.
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 1000);
     } catch (error) {
       setErrorMessage('주문 제출에 실패했습니다. 다시 시도해주세요.');
       setSuccessMessage(null);
