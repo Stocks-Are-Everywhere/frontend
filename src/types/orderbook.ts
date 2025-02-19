@@ -8,6 +8,6 @@ export interface OrderBookData {
   companyCode: string;
   currentPrice: number;
   prevPrice: number;
-  askLevels: PriceLevel[];
-  bidLevels: PriceLevel[];
+  sellLevels: PriceLevel[];
+  buyLevels: PriceLevel[];
 }
