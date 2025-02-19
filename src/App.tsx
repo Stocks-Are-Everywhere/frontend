@@ -1,8 +1,11 @@
 import React from 'react';
+
+import TradeHistoryList from './components/TradeHistory';
 import OrderBook from './components/OrderBook';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import styled from 'styled-components';
+import StockChart from './components/StockChart';
 
 const App: React.FC = () => {
   return (
@@ -11,6 +14,8 @@ const App: React.FC = () => {
         <Header />
         <MainContent>
           <OrderBook />
+          <TradeHistoryList />
+          <StockChart />
         </MainContent>
         <Footer />
       </AppContainer>
