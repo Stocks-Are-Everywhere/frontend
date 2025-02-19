@@ -19,14 +19,28 @@ const CustomOrderBook: React.FC = () => {
     setPriceType(newPriceType);
   };
 
-  const handleSubmit = () => {
-    alert(`
-      주문 정보:
-      - 종류: ${side === 'buy' ? '구매' : '판매'}
-      - 가격타입: ${priceType === 'limit' ? '지정가' : '시장가'}
-      - 가격: ${priceType === 'limit' ? price + '원' : '시장가'}
-      - 수량: ${quantity}주
-    `);
+  const handleSubmit = async () => {
+    // 백엔드 요청에 필요한 데이터 설정 (필요에 따라 수정)
+    const orderRequest = {
+      companyCode: "COMP001",    // 회사 코드 (예시: COMP001)
+      type: side,                // 'buy' 또는 'sell'
+      quantity: quantity,
+      price: priceType === 'limit' ? price : 0, // 시장가의 경우 price는 0 또는 null 처리
+      userId: 1           // 사용자 ID (가상의 유저 ID)  
+    };
+
+    try {
+      // API 요청 보내기
+      await fetch('http://localhost:8080/api/v1/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderRequest)
+      });
+    } catch (error) {
+      console.error('주문 요청 중 에러 발생:', error);
+    }
   };
 
   return (
@@ -118,16 +132,16 @@ const SideButton = styled.button<{ active: boolean; $color: string }>`
   padding: 12px 0;
   border: 1px solid #ddd;
   border-radius: 12px;
-  background: none;
-  color: ${(props) => (props.active ? props.$color : '#666')};
+  background-color: ${(props) => (props.active ? props.$color : 'transparent')};
+  color: ${(props) => (props.active ? '#fff' : '#666')};
   font-size: 16px;
   cursor: pointer;
   transition: all 0.3s ease;
 
   &:hover {
-    background: #f0f0f0;
+    background-color: ${(props) => (props.active ? props.$color : '#f0f0f0')};
     transform: scale(1.05);
-    color: #333;
+    color: #fff;
   }
 `;
 
@@ -137,16 +151,16 @@ const PriceTypeButton = styled.button<{ active: boolean; color?: string }>`
   padding: 12px 0;
   border: 1px solid #ddd;
   border-radius: 12px;
-  background: none;
-  color: ${(props) => (props.active ? props.color : '#666')};
+  background-color: ${(props) => (props.active ? props.color : 'transparent')};
+  color: ${(props) => (props.active ? '#fff' : '#666')};
   font-size: 16px;
   cursor: pointer;
   transition: all 0.3s ease;
 
   &:hover {
-    background: #f0f0f0;
+    background-color: ${(props) => (props.active ? props.color : '#f0f0f0')};
     transform: scale(1.05);
-    color: #333;
+    color: #fff;
   }
 `;
 
