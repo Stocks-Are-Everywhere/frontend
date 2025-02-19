@@ -1,10 +1,10 @@
 import React from 'react';
-import OrderBook from './components/OrderBook';
+import TradeHistoryList from './components/TradeHistory';
 
 const App: React.FC = () => {
   return (
     <div className="App">
-      <OrderBook />
+      <TradeHistoryList />
     </div>
   );
 };
