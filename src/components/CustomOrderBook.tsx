@@ -1,63 +1,54 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { submitOrder } from '../services/orderService';
+import { OrderRequest } from '../types/customerorderbook';
 
-// 주문 종류 및 가격 타입 정의
-type OrderSide = 'buy' | 'sell';
-type PriceType = 'limit' | 'market';
+export type OrderSide = 'BUY' | 'SELL';
+export type PriceType = 'limit' | 'market';
 
 const CustomOrderBook: React.FC = () => {
-  const [side, setSide] = useState<OrderSide>('buy');
+  const [side, setSide] = useState<OrderSide>('BUY');
   const [priceType, setPriceType] = useState<PriceType>('limit');
   const [price, setPrice] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleSideChange = (newSide: OrderSide) => {
-    setSide(newSide);
-  };
-
-  const handlePriceTypeChange = (newPriceType: PriceType) => {
-    setPriceType(newPriceType);
-  };
+  const handleSideChange = (newSide: OrderSide) => setSide(newSide);
+  const handlePriceTypeChange = (newPriceType: PriceType) => setPriceType(newPriceType);
 
   const handleSubmit = async () => {
-    // 백엔드 요청에 필요한 데이터 설정 (필요에 따라 수정)
-    const orderRequest = {
-      companyCode: "COMP001",    // 회사 코드 (예시: COMP001)
-      type: side,                // 'buy' 또는 'sell'
-      quantity: quantity,
-      price: priceType === 'limit' ? price : 0, // 시장가의 경우 price는 0 또는 null 처리
-      userId: 1           // 사용자 ID (가상의 유저 ID)  
+    const orderRequest: OrderRequest = {
+      companyCode: 'COMP002',
+      type: side, // 이미 OrderSide가 'BUY' 또는 'SELL'로 되어 있음
+      quantity,
+      price: priceType === 'limit' ? price : 0,
+      userId: 1,
     };
 
     try {
-      // API 요청 보내기
-      await fetch('http://localhost:8080/api/v1/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(orderRequest)
-      });
+      await submitOrder(orderRequest);
+      setSuccessMessage('주문이 성공적으로 제출되었습니다.');
+      setErrorMessage(null);
     } catch (error) {
-      console.error('주문 요청 중 에러 발생:', error);
+      setErrorMessage('주문 제출에 실패했습니다. 다시 시도해주세요.');
+      setSuccessMessage(null);
     }
   };
 
   return (
     <OrderContainer>
       <Title>주문하기</Title>
-      
-      {/* 1) 구매/판매 */}
+
       <ButtonGroup>
-        <SideButton active={side === 'buy'} $color="#333" onClick={() => handleSideChange('buy')}>
+        <SideButton active={side === 'BUY'} $color="#333" onClick={() => handleSideChange('BUY')}>
           구매
         </SideButton>
-        <SideButton active={side === 'sell'} $color="#2d91ff" onClick={() => handleSideChange('sell')}>
+        <SideButton active={side === 'SELL'} $color="#2d91ff" onClick={() => handleSideChange('SELL')}>
           판매
         </SideButton>
       </ButtonGroup>
 
-      {/* 2) 지정가/시장가 */}
       <ButtonGroup>
         <PriceTypeButton active={priceType === 'limit'} color="#444" onClick={() => handlePriceTypeChange('limit')}>
           지정가
@@ -67,7 +58,6 @@ const CustomOrderBook: React.FC = () => {
         </PriceTypeButton>
       </ButtonGroup>
 
-      {/* 3) 가격 (지정가인 경우만) */}
       {priceType === 'limit' && (
         <InputGroup>
           <Label>가격</Label>
@@ -80,7 +70,6 @@ const CustomOrderBook: React.FC = () => {
         </InputGroup>
       )}
 
-      {/* 4) 수량 */}
       <InputGroup>
         <Label>수량</Label>
         <Input
@@ -91,25 +80,27 @@ const CustomOrderBook: React.FC = () => {
         />
       </InputGroup>
 
-      {/* 주문 버튼 */}
       <SubmitButton side={side} onClick={handleSubmit}>
         주문하기
       </SubmitButton>
+
+      {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
+      {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
     </OrderContainer>
   );
 };
+
+export default CustomOrderBook;
 
 // Styled Components
 const OrderContainer = styled.div`
   width: 360px;
   margin: 20px auto;
-  background: white;
+  background: #fff;
   border-radius: 24px;
   box-shadow: 0 2px 40px rgba(0, 0, 0, 0.05);
-  padding: 24px;
-  padding-right: 40px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+  padding: 24px 40px 24px 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 `;
 
 const Title = styled.h3`
@@ -145,7 +136,7 @@ const SideButton = styled.button<{ active: boolean; $color: string }>`
   }
 `;
 
-const PriceTypeButton = styled.button<{ active: boolean; color?: string }>`
+const PriceTypeButton = styled.button<{ active: boolean; color: string }>`
   flex: 1;
   margin: 0 5px;
   padding: 12px 0;
@@ -168,13 +159,10 @@ const InputGroup = styled.div`
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   width: 100%;
-  box-sizing: border-box;
 `;
 
 const Label = styled.label`
-  display: block;
   margin-bottom: 8px;
   font-size: 14px;
   color: #333;
@@ -186,8 +174,8 @@ const Input = styled.input`
   border: none;
   border-radius: 8px;
   background: #f8f9fa;
-  color: #333;
   font-size: 16px;
+  color: #333;
   outline: none;
 
   &::placeholder {
@@ -213,4 +201,22 @@ const SubmitButton = styled.button<{ side: OrderSide }>`
   }
 `;
 
-export default CustomOrderBook;
+const SuccessMessage = styled.div`
+  margin-top: 20px;
+  padding: 10px;
+  color: green;
+  text-align: center;
+  border: 1px solid green;
+  border-radius: 8px;
+  background-color: #e6ffe6;
+`;
+
+const ErrorMessage = styled.div`
+  margin-top: 20px;
+  padding: 10px;
+  color: red;
+  text-align: center;
+  border: 1px solid red;
+  border-radius: 8px;
+  background-color: #ffe6e6;
+`;
