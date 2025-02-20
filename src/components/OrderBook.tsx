@@ -1,3 +1,4 @@
+// OrderBook.tsx
 import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import WebSocketService from '../services/WebSocketService';
@@ -37,17 +38,18 @@ const OrderBook: React.FC = () => {
     return Math.min((quantity / MAX_QUANTITY) * 100, 100);
   };
 
-  // 현재가 계산 함수
-  const calculateCurrentPrice = (data: OrderBookData) => {
-    if (data.askLevels.length === 0 || data.bidLevels.length === 0) return null;
-
-    // 최우선 매도/매수 호가의 중간값을 현재가로 설정
-    const bestAskPrice = data.askLevels[data.askLevels.length - 1].price; // 가장 낮은 매도가
-    const bestBidPrice = data.bidLevels[0].price; // 가장 높은 매수가
+  // 현재가 계산 함수 (askLevels, bidLevels가 없으면 기본값([]) 사용)
+  const calculateCurrentPrice = (data: Partial<OrderBookData>): number | null => {
+    const askLevels = data.askLevels ?? [];
+    const bidLevels = data.bidLevels ?? [];
+    if (askLevels.length === 0 || bidLevels.length === 0) return null;
+    // 매도는 오름차순(최저가가 첫번째), 매수는 내림차순(최고가가 첫번째)라고 가정
+    const bestAskPrice = askLevels[0].price;
+    const bestBidPrice = bidLevels[0].price;
     return Math.floor((bestAskPrice + bestBidPrice) / 2);
   };
 
-  // 툴팁 내용을 더 보기 좋게 포맷팅
+  // 툴팁 내용을 포맷팅
   const formatTooltipContent = (orderCount: number) => {
     return `총 ${orderCount.toLocaleString()}건`;
   };
@@ -61,10 +63,7 @@ const OrderBook: React.FC = () => {
     ) {
       const priceElement = document.querySelector('.current-price');
       if (priceElement) {
-        // 애니메이션 클래스 추가
         priceElement.classList.add('price-changed');
-
-        // 애니메이션 종료 후 클래스 제거
         setTimeout(() => {
           priceElement.classList.remove('price-changed');
         }, 500);
@@ -75,21 +74,82 @@ const OrderBook: React.FC = () => {
 
   useEffect(() => {
     webSocketService.connect();
-    webSocketService.subscribe('/topic/orderbook/005930', (data) => {
-      // 현재가와 이전가 계산하여 데이터에 추가
-      const currentPrice = calculateCurrentPrice(data);
-      const prevPrice = prevOrderBook.current
-        ? calculateCurrentPrice(prevOrderBook.current)
-        : currentPrice;
-
-      const enrichedData = {
-        ...data,
-        currentPrice: currentPrice ?? 0,
-        prevPrice: prevPrice ?? 0,
-      };
-
-      prevOrderBook.current = orderBook;
-      setOrderBook(enrichedData);
+    webSocketService.subscribe('/topic/orderbook/005930', (data: any) => {
+      // 백엔드에서 단일 주문 업데이트 메시지를 보내는 경우
+      if (data.orderId) {
+        const newOrder = data;
+        setOrderBook((prevBook) => {
+          let newBook: OrderBookData;
+          if (prevBook) {
+            newBook = { ...prevBook };
+          } else {
+            newBook = {
+              companyCode: newOrder.companyCode,
+              currentPrice: 0,
+              prevPrice: 0,
+              askLevels: [],
+              bidLevels: []
+            };
+          }
+          // 주문 종류에 따라 해당 호가 배열 업데이트
+          if (newOrder.type === 'BUY') {
+            const index = newBook.bidLevels.findIndex(
+              (level) => level.price === newOrder.price
+            );
+            if (index > -1) {
+              const updatedLevel = { ...newBook.bidLevels[index] };
+              updatedLevel.quantity += newOrder.quantity;
+              updatedLevel.orderCount += 1;
+              newBook.bidLevels[index] = updatedLevel;
+            } else {
+              newBook.bidLevels.push({
+                price: newOrder.price,
+                quantity: newOrder.quantity,
+                orderCount: 1
+              });
+            }
+            // 내림차순 정렬 (최고가가 첫번째)
+            newBook.bidLevels.sort((a, b) => b.price - a.price);
+          } else if (newOrder.type === 'SELL') {
+            const index = newBook.askLevels.findIndex(
+              (level) => level.price === newOrder.price
+            );
+            if (index > -1) {
+              const updatedLevel = { ...newBook.askLevels[index] };
+              updatedLevel.quantity += newOrder.quantity;
+              updatedLevel.orderCount += 1;
+              newBook.askLevels[index] = updatedLevel;
+            } else {
+              newBook.askLevels.push({
+                price: newOrder.price,
+                quantity: newOrder.quantity,
+                orderCount: 1
+              });
+            }
+            // 오름차순 정렬 (최저가가 첫번째)
+            newBook.askLevels.sort((a, b) => a.price - b.price);
+          }
+          // 현재가 갱신
+          const newCurrentPrice = calculateCurrentPrice(newBook);
+          newBook.prevPrice = newBook.currentPrice;
+          newBook.currentPrice = newCurrentPrice ?? 0;
+          prevOrderBook.current = prevBook;
+          return newBook;
+        });
+      } else {
+        // 전체 주문서 스냅샷 형태일 경우 기존 로직 사용 (참고용)
+        const currentPrice = calculateCurrentPrice(data);
+        const prevPriceValue = prevOrderBook.current
+          ? calculateCurrentPrice(prevOrderBook.current)
+          : currentPrice;
+        const enrichedData: OrderBookData = {
+          ...data,
+          currentPrice: currentPrice ?? 0,
+          prevPrice: prevPriceValue ?? 0
+        };
+        prevOrderBook.current = orderBook;
+        setOrderBook(enrichedData);
+      }
     });
 
     return () => {
@@ -156,29 +216,24 @@ const OrderBook: React.FC = () => {
                 type={
                   (orderBook?.currentPrice ?? 0) > (orderBook?.prevPrice ?? 0)
                     ? 'up'
-                    : (orderBook?.currentPrice ?? 0) <
-                      (orderBook?.prevPrice ?? 0)
+                    : (orderBook?.currentPrice ?? 0) < (orderBook?.prevPrice ?? 0)
                     ? 'down'
                     : 'same'
                 }
               >
-                {(
-                  (orderBook?.currentPrice ?? 0) - (orderBook?.prevPrice ?? 0)
-                ).toLocaleString()}
+                {(orderBook?.currentPrice ?? 0) - (orderBook?.prevPrice ?? 0)}
               </ChangeAmount>
               <ChangePercent
                 type={
                   (orderBook?.currentPrice ?? 0) > (orderBook?.prevPrice ?? 0)
                     ? 'up'
-                    : (orderBook?.currentPrice ?? 0) <
-                      (orderBook?.prevPrice ?? 0)
+                    : (orderBook?.currentPrice ?? 0) < (orderBook?.prevPrice ?? 0)
                     ? 'down'
                     : 'same'
                 }
               >
                 {(
-                  (((orderBook?.currentPrice ?? 0) -
-                    (orderBook?.prevPrice ?? 0)) /
+                  (((orderBook?.currentPrice ?? 0) - (orderBook?.prevPrice ?? 0)) /
                     (orderBook?.prevPrice ?? 1)) *
                   100
                 ).toFixed(2)}
@@ -223,6 +278,7 @@ const OrderBook: React.FC = () => {
 };
 
 // Styled Components
+
 const Container = styled.div`
   width: 360px;
   margin: 20px auto;
@@ -258,11 +314,6 @@ const CompanyName = styled.span`
   color: #666;
 `;
 
-const UpdateTime = styled.div`
-  font-size: 12px;
-  color: #999;
-`;
-
 const OrderBookWrapper = styled.div`
   background: #f8f9fa;
   border-radius: 16px;
@@ -275,7 +326,6 @@ const PriceLevelRow = styled.div`
   display: flex;
   align-items: center;
   padding: 0 16px;
-
   &:hover {
     background: rgba(0, 0, 0, 0.02);
   }
@@ -309,19 +359,18 @@ const Price = styled.span<{
   padding: 4px 8px;
   border-radius: 4px;
   transition: all 0.3s ease;
-
   ${(props) => {
     switch (props.changed) {
       case 'increase':
         return `
-                  background-color: rgba(45, 145, 255, 0.1);
-                  transform: scale(1.05);
-              `;
+          background-color: rgba(45, 145, 255, 0.1);
+          transform: scale(1.05);
+        `;
       case 'decrease':
         return `
-                  background-color: rgba(255, 84, 84, 0.1);
-                  transform: scale(1.05);
-              `;
+          background-color: rgba(255, 84, 84, 0.1);
+          transform: scale(1.05);
+        `;
       default:
         return '';
     }
@@ -334,27 +383,25 @@ const Quantity = styled.span<{ changed: 'increase' | 'decrease' | 'none' }>`
   position: relative;
   padding: 4px 8px;
   transition: all 0.3s ease;
-  cursor: help; // 툴팁이 있음을 나타내는 커서
-
+  cursor: help;
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
     border-radius: 4px;
   }
-
   ${(props) => {
     switch (props.changed) {
       case 'increase':
         return `
-                    color: #2d91ff;
-                    font-weight: bold;
-                    transform: scale(1.05);
-                `;
+          color: #2d91ff;
+          font-weight: bold;
+          transform: scale(1.05);
+        `;
       case 'decrease':
         return `
-                    color: #ff5454;
-                    font-weight: bold;
-                    transform: scale(1.05);
-                `;
+          color: #ff5454;
+          font-weight: bold;
+          transform: scale(1.05);
+        `;
       default:
         return '';
     }
@@ -365,33 +412,31 @@ const QuantityTooltip = styled.div`
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: -40px; // -30px에서 -40px로 변경하여 더 멀리 표시
+  top: -40px;
   background: rgba(0, 0, 0, 0.8);
   color: white;
-  padding: 8px 12px; // 패딩 증가
-  border-radius: 6px; // 모서리 둥글기 증가
-  font-size: 13px; // 폰트 크기 증가
-  font-weight: 500; // 폰트 두께 증가
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
   white-space: nowrap;
   opacity: 0;
-  transition: all 0.3s ease; // 부드러운 전환 효과
+  transition: all 0.3s ease;
   pointer-events: none;
   z-index: 10;
-
   &::after {
     content: '';
     position: absolute;
     left: 50%;
-    bottom: -6px; // 화살표 크기에 맞춰 조정
+    bottom: -6px;
     transform: translateX(-50%);
-    border-left: 6px solid transparent; // 화살표 크기 증가
-    border-right: 6px solid transparent; // 화살표 크기 증가
-    border-top: 6px solid rgba(0, 0, 0, 0.8); // 화살표 크기 증가
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid rgba(0, 0, 0, 0.8);
   }
-
   ${Quantity}:hover & {
     opacity: 1;
-    transform: translateX(-50%) translateY(-5px); // 호버 시 약간 위로 이동
+    transform: translateX(-50%) translateY(-5px);
   }
 `;
 
@@ -450,11 +495,9 @@ const CurrentPrice = styled.div<{ type: 'up' | 'down' | 'same' }>`
     }
   }};
   transition: all 0.3s ease;
-
   &.price-changed {
     animation: priceBlink 0.5s ease;
   }
-
   @keyframes priceBlink {
     0% {
       transform: scale(1);
@@ -501,17 +544,10 @@ const ChangePercent = styled(ChangeAmount)`
   }
 `;
 
-// 기존 Divider 스타일 수정
 const Divider = styled.hr`
   margin: 0;
   border: none;
   border-top: 1px solid #eee;
 `;
-
-// 수량 막대 비율 계산 함수
-const getQuantityPercentage = (quantity: number) => {
-  const MAX_QUANTITY = 100000; // 적절한 최대값 설정
-  return Math.min((quantity / MAX_QUANTITY) * 100, 100);
-};
 
 export default OrderBook;

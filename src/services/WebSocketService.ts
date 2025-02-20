@@ -1,32 +1,13 @@
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
+// services/WebSocketService.ts
 import { OrderBookData } from '../types/orderbook';
 
 class WebSocketService {
   private static instance: WebSocketService;
-  private client: Client;
+  private socket: WebSocket | null = null;
   private subscriptions: Map<string, (data: any) => void>;
 
   private constructor() {
     this.subscriptions = new Map();
-    this.client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
-      debug: (str) => {
-        console.log(str);
-      },
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-    });
-
-    this.client.onConnect = () => {
-      console.log('Connected to WebSocket');
-      this.subscribeToTopics();
-    };
-
-    this.client.onStompError = (frame) => {
-      console.error('WebSocket Error:', frame);
-    };
   }
 
   public static getInstance(): WebSocketService {
@@ -37,38 +18,43 @@ class WebSocketService {
   }
 
   public connect(): void {
-    this.client.activate();
+    // 순수 WebSocket 연결 (STOMP/SockJS 사용하지 않음)
+    this.socket = new WebSocket('ws://localhost:8080/ws/trades');
+
+    this.socket.onopen = () => {
+      console.log('Connected to WebSocket');
+    };
+
+    this.socket.onmessage = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        this.subscriptions.forEach(callback => {
+          callback(data);
+        });
+      } catch (error) {
+        console.error('Error parsing message:', error);
+      }
+    };
+
+    this.socket.onerror = (error) => {
+      console.error('WebSocket Error:', error);
+    };
+
+    this.socket.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
   }
 
   public disconnect(): void {
-    this.client.deactivate();
-  }
-
-  public subscribe(
-    topic: string,
-    callback: (data: OrderBookData) => void
-  ): void {
-    this.subscriptions.set(topic, callback);
-
-    if (this.client.connected) {
-      this.subscribeToTopic(topic, callback);
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
     }
   }
 
-  private subscribeToTopics(): void {
-    this.subscriptions.forEach((callback, topic) => {
-      this.subscribeToTopic(topic, callback);
-    });
-  }
-
-  private subscribeToTopic(
-    topic: string,
-    callback: (data: OrderBookData) => void
-  ): void {
-    this.client.subscribe(topic, (message) => {
-      const data = JSON.parse(message.body);
-      callback(data);
-    });
+  // topic은 인터페이스 호환을 위해 남겨두되, 단일 채널의 모든 메시지를 처리합니다.
+  public subscribe(topic: string, callback: (data: any) => void): void {
+    this.subscriptions.set(topic, callback);
   }
 }
 
