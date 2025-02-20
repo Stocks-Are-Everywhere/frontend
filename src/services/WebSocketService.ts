@@ -1,4 +1,3 @@
-// services/WebSocketService.ts
 import { OrderBookData } from '../types/orderbook';
 
 class WebSocketService {
@@ -52,7 +51,7 @@ class WebSocketService {
     }
   }
 
-  // topic은 인터페이스 호환을 위해 남겨두되, 단일 채널의 모든 메시지를 처리합니다.
+  // 단일 채널의 모든 메시지를 처리하기 위해 topic은 인터페이스 호환용으로 남김
   public subscribe(topic: string, callback: (data: any) => void): void {
     this.subscriptions.set(topic, callback);
   }

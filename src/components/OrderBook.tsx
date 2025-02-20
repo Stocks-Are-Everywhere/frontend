@@ -1,4 +1,3 @@
-// OrderBook.tsx
 import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import WebSocketService from '../services/WebSocketService';
@@ -21,32 +20,32 @@ const OrderBook: React.FC = () => {
     return 'none';
   };
 
-  // 수량 변동 추적
+  // 수량 변동 추적 (totalQuantity 기준)
   const getQuantityChange = (
     current: PriceLevel,
     previous: PriceLevel | undefined
   ) => {
     if (!previous) return 'none';
-    if (current.quantity > previous.quantity) return 'increase';
-    if (current.quantity < previous.quantity) return 'decrease';
+    if (current.totalQuantity > previous.totalQuantity) return 'increase';
+    if (current.totalQuantity < previous.totalQuantity) return 'decrease';
     return 'none';
   };
 
-  // 수량 퍼센티지 계산
-  const getQuantityPercentage = (quantity: number) => {
+  // 수량 퍼센티지 계산 (totalQuantity 기준)
+  const getQuantityPercentage = (totalQuantity: number) => {
     const MAX_QUANTITY = 10000; // 적절한 최대값 설정
-    return Math.min((quantity / MAX_QUANTITY) * 100, 100);
+    return Math.min((totalQuantity / MAX_QUANTITY) * 100, 100);
   };
 
-  // 현재가 계산 함수 (askLevels, bidLevels가 없으면 기본값([]) 사용)
+  // 현재가 계산 함수  
+  // sellLevels에서 최저 가격, buyLevels에서 최고 가격을 찾아 중간값 계산
   const calculateCurrentPrice = (data: Partial<OrderBookData>): number | null => {
-    const askLevels = data.askLevels ?? [];
-    const bidLevels = data.bidLevels ?? [];
-    if (askLevels.length === 0 || bidLevels.length === 0) return null;
-    // 매도는 오름차순(최저가가 첫번째), 매수는 내림차순(최고가가 첫번째)라고 가정
-    const bestAskPrice = askLevels[0].price;
-    const bestBidPrice = bidLevels[0].price;
-    return Math.floor((bestAskPrice + bestBidPrice) / 2);
+    const sellLevels = data.sellLevels ?? [];
+    const buyLevels = data.buyLevels ?? [];
+    if (sellLevels.length === 0 || buyLevels.length === 0) return null;
+    const bestSellPrice = Math.min(...sellLevels.map(level => level.price));
+    const bestBuyPrice = Math.max(...buyLevels.map(level => level.price));
+    return Math.floor((bestSellPrice + bestBuyPrice) / 2);
   };
 
   // 툴팁 내용을 포맷팅
@@ -75,81 +74,18 @@ const OrderBook: React.FC = () => {
   useEffect(() => {
     webSocketService.connect();
     webSocketService.subscribe('/topic/orderbook/005930', (data: any) => {
-      // 백엔드에서 단일 주문 업데이트 메시지를 보내는 경우
-      if (data.orderId) {
-        const newOrder = data;
-        setOrderBook((prevBook) => {
-          let newBook: OrderBookData;
-          if (prevBook) {
-            newBook = { ...prevBook };
-          } else {
-            newBook = {
-              companyCode: newOrder.companyCode,
-              currentPrice: 0,
-              prevPrice: 0,
-              askLevels: [],
-              bidLevels: []
-            };
-          }
-          // 주문 종류에 따라 해당 호가 배열 업데이트
-          if (newOrder.type === 'BUY') {
-            const index = newBook.bidLevels.findIndex(
-              (level) => level.price === newOrder.price
-            );
-            if (index > -1) {
-              const updatedLevel = { ...newBook.bidLevels[index] };
-              updatedLevel.quantity += newOrder.quantity;
-              updatedLevel.orderCount += 1;
-              newBook.bidLevels[index] = updatedLevel;
-            } else {
-              newBook.bidLevels.push({
-                price: newOrder.price,
-                quantity: newOrder.quantity,
-                orderCount: 1
-              });
-            }
-            // 내림차순 정렬 (최고가가 첫번째)
-            newBook.bidLevels.sort((a, b) => b.price - a.price);
-          } else if (newOrder.type === 'SELL') {
-            const index = newBook.askLevels.findIndex(
-              (level) => level.price === newOrder.price
-            );
-            if (index > -1) {
-              const updatedLevel = { ...newBook.askLevels[index] };
-              updatedLevel.quantity += newOrder.quantity;
-              updatedLevel.orderCount += 1;
-              newBook.askLevels[index] = updatedLevel;
-            } else {
-              newBook.askLevels.push({
-                price: newOrder.price,
-                quantity: newOrder.quantity,
-                orderCount: 1
-              });
-            }
-            // 오름차순 정렬 (최저가가 첫번째)
-            newBook.askLevels.sort((a, b) => a.price - b.price);
-          }
-          // 현재가 갱신
-          const newCurrentPrice = calculateCurrentPrice(newBook);
-          newBook.prevPrice = newBook.currentPrice;
-          newBook.currentPrice = newCurrentPrice ?? 0;
-          prevOrderBook.current = prevBook;
-          return newBook;
-        });
-      } else {
-        // 전체 주문서 스냅샷 형태일 경우 기존 로직 사용 (참고용)
-        const currentPrice = calculateCurrentPrice(data);
-        const prevPriceValue = prevOrderBook.current
-          ? calculateCurrentPrice(prevOrderBook.current)
-          : currentPrice;
-        const enrichedData: OrderBookData = {
-          ...data,
-          currentPrice: currentPrice ?? 0,
-          prevPrice: prevPriceValue ?? 0
-        };
-        prevOrderBook.current = orderBook;
-        setOrderBook(enrichedData);
-      }
+      // 전체 주문서 스냅샷 형태의 데이터를 수신한다고 가정
+      const currentPrice = calculateCurrentPrice(data);
+      const prevPriceValue = prevOrderBook.current
+        ? calculateCurrentPrice(prevOrderBook.current)
+        : currentPrice;
+      const enrichedData: OrderBookData = {
+        ...data,
+        currentPrice: currentPrice ?? 0,
+        prevPrice: prevPriceValue ?? 0,
+      };
+      prevOrderBook.current = orderBook;
+      setOrderBook(enrichedData);
     });
 
     return () => {
@@ -171,21 +107,21 @@ const OrderBook: React.FC = () => {
       </Header>
 
       <OrderBookWrapper>
+        {/* 매도 호가창: 서버에서는 sellLevels로 전달 */}
         <AskLevels>
-          {orderBook.askLevels.map((level, index) => {
-            const prevLevel = prevOrderBook.current?.askLevels[index];
+          {orderBook.sellLevels.map((level, index) => {
+            const prevLevel = prevOrderBook.current?.sellLevels[index];
             const priceChange = getPriceChange(level, prevLevel);
             const quantityChange = getQuantityChange(level, prevLevel);
-
             return (
-              <PriceLevelRow key={`ask-${index}`}>
+              <PriceLevelRow key={`sell-${index}`}>
                 <QuantityBar
                   type="ask"
-                  width={getQuantityPercentage(level.quantity)}
+                  width={getQuantityPercentage(level.totalQuantity)}
                 />
                 <PriceLevelContent>
                   <Quantity changed={quantityChange}>
-                    {level.quantity.toLocaleString()}
+                    {level.totalQuantity.toLocaleString()}
                     <QuantityTooltip>{`${level.orderCount}건`}</QuantityTooltip>
                   </Quantity>
                   <Price type="ask" changed={priceChange}>
@@ -245,21 +181,21 @@ const OrderBook: React.FC = () => {
 
         <Divider />
 
+        {/* 매수 호가창: 서버에서는 buyLevels로 전달 */}
         <BidLevels>
-          {orderBook.bidLevels.map((level, index) => {
-            const prevLevel = prevOrderBook.current?.bidLevels[index];
+          {orderBook.buyLevels.map((level, index) => {
+            const prevLevel = prevOrderBook.current?.buyLevels[index];
             const priceChange = getPriceChange(level, prevLevel);
             const quantityChange = getQuantityChange(level, prevLevel);
-
             return (
-              <PriceLevelRow key={`bid-${index}`}>
+              <PriceLevelRow key={`buy-${index}`}>
                 <QuantityBar
                   type="bid"
-                  width={getQuantityPercentage(level.quantity)}
+                  width={getQuantityPercentage(level.totalQuantity)}
                 />
                 <PriceLevelContent>
                   <Quantity changed={quantityChange}>
-                    {level.quantity.toLocaleString()}
+                    {level.totalQuantity.toLocaleString()}
                     <QuantityTooltip>
                       {formatTooltipContent(level.orderCount)}
                     </QuantityTooltip>
@@ -276,8 +212,6 @@ const OrderBook: React.FC = () => {
     </Container>
   );
 };
-
-// Styled Components
 
 const Container = styled.div`
   width: 360px;
