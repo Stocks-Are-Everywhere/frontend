@@ -6,7 +6,7 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <OrderBook />
-      <StockChart />
+      <StockChart companyCode='005930' />
     </div>
   );
 };
