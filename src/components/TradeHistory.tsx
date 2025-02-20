@@ -104,7 +104,7 @@ const TradeHistoryList: React.FC = () => {
 
 const Container = styled.div`
   width: 360px;
-  height: 600px; // 고정 높이 설정
+  height: 420px; // 고정 높이 설정
   margin: 20px auto;
   background: white;
   border-radius: 24px;
