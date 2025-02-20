@@ -4,6 +4,7 @@ import ReactApexChart from 'react-apexcharts';
 import DistributionResFromApi from '../apis/DistributionChart';
 import Distribution from '../apis/DistributionChart';
 import {getTodayDistributionChart} from '../services/ChartService'
+import useStockPrice from "../services/KisSocket";
 
 interface ChartProps {
   companyCode: string;
@@ -13,7 +14,8 @@ function StockChart({companyCode}: ChartProps) {
 
     const [stockData, setStockData] = useState<Distribution[]>([]);
     const [companyName, setCompanyName] = useState<string>();
-    
+    const [price, setPrice] = useState<number>(useStockPrice(companyCode));
+
     const generateSampleData = async () => {
       try {
         const data: Distribution[] = [];
@@ -40,6 +42,13 @@ function StockChart({companyCode}: ChartProps) {
     useEffect(() => {
       generateSampleData();
     }, []);
+
+    useEffect(() => {
+      if (price === 0 && stockData.length > 0) {
+        const lastPrice = stockData[stockData.length - 1].close;
+        setPrice(lastPrice);
+      }
+    }, [price, stockData]);
 
     const chartOptions : ApexOptions = {
         chart: {
@@ -72,7 +81,7 @@ function StockChart({companyCode}: ChartProps) {
           }
         },
         subtitle: {
-          text: '58,300원',
+          text: `${price}원`,
           offsetX: 0,
           offsetY: 24,
           style: {
@@ -138,7 +147,7 @@ function StockChart({companyCode}: ChartProps) {
             colors: ["#FF0000"],
           },
         },
-      };
+    };
     const koreaTimeDiff = 9 * 60 * 60 * 1000; 
     const chartSeries = [
       {
