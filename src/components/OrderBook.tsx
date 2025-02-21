@@ -6,8 +6,8 @@ import { OrderBookData, PriceLevel } from '../types/orderbook';
 const OrderBook: React.FC = () => {
   const [orderBook, setOrderBook] = useState<OrderBookData | null>(null);
   const prevOrderBook = useRef<OrderBookData | null>(null);
-  const prevPrice = useRef<number | null>(null); // 이전 가격 저장용
-  const webSocketService = WebSocketService.getInstance();
+  const prevPrice = useRef<number | null>(null);
+  const orderBookWS = WebSocketService.getInstance<OrderBookData>('orderbook');
 
   // 가격 변동 추적
   const getPriceChange = (
@@ -33,26 +33,23 @@ const OrderBook: React.FC = () => {
 
   // 수량 퍼센티지 계산
   const getQuantityPercentage = (quantity: number) => {
-    const MAX_QUANTITY = 10000; // 적절한 최대값 설정
+    const MAX_QUANTITY = 10000;
     return Math.min((quantity / MAX_QUANTITY) * 100, 100);
   };
 
   // 현재가 계산 함수
   const calculateCurrentPrice = (data: OrderBookData) => {
-    if (data.sellLevels.length === 0 || data.buyLevels.length === 0) return null;
-
-    // 최우선 매도/매수 호가의 중간값을 현재가로 설정
-    const bestAskPrice = data.sellLevels[data.sellLevels.length - 1].price; // 가장 낮은 매도가
-    const bestBidPrice = data.buyLevels[0].price; // 가장 높은 매수가
+    if (data.sellLevels.length === 0 || data.buyLevels.length === 0)
+      return null;
+    const bestAskPrice = data.sellLevels[data.sellLevels.length - 1].price;
+    const bestBidPrice = data.buyLevels[0].price;
     return Math.floor((bestAskPrice + bestBidPrice) / 2);
   };
 
-  // 툴팁 내용을 더 보기 좋게 포맷팅
   const formatTooltipContent = (orderCount: number) => {
     return `총 ${orderCount.toLocaleString()}건`;
   };
 
-  // 현재가 변경 감지 및 애니메이션 적용
   useEffect(() => {
     if (
       orderBook?.currentPrice &&
@@ -61,10 +58,7 @@ const OrderBook: React.FC = () => {
     ) {
       const priceElement = document.querySelector('.current-price');
       if (priceElement) {
-        // 애니메이션 클래스 추가
         priceElement.classList.add('price-changed');
-
-        // 애니메이션 종료 후 클래스 제거
         setTimeout(() => {
           priceElement.classList.remove('price-changed');
         }, 500);
@@ -74,9 +68,8 @@ const OrderBook: React.FC = () => {
   }, [orderBook?.currentPrice]);
 
   useEffect(() => {
-    webSocketService.connect();
-    webSocketService.subscribe('/topic/orderbook/005930', (data) => {
-      // 현재가와 이전가 계산하여 데이터에 추가
+    orderBookWS.connect();
+    orderBookWS.subscribe('/topic/orderbook/005930', (data: OrderBookData) => {
       const currentPrice = calculateCurrentPrice(data);
       const prevPrice = prevOrderBook.current
         ? calculateCurrentPrice(prevOrderBook.current)
@@ -93,7 +86,7 @@ const OrderBook: React.FC = () => {
     });
 
     return () => {
-      webSocketService.disconnect();
+      orderBookWS.disconnect();
     };
   }, []);
 

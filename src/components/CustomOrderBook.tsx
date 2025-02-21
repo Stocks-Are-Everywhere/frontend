@@ -15,7 +15,8 @@ const CustomOrderBook: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSideChange = (newSide: OrderSide) => setSide(newSide);
-  const handlePriceTypeChange = (newPriceType: PriceType) => setPriceType(newPriceType);
+  const handlePriceTypeChange = (newPriceType: PriceType) =>
+    setPriceType(newPriceType);
 
   const handleSubmit = async () => {
     const orderRequest: OrderRequest = {
@@ -45,19 +46,35 @@ const CustomOrderBook: React.FC = () => {
       <Title>주문하기</Title>
 
       <ButtonGroup>
-        <SideButton active={side === 'BUY'} $color="#333" onClick={() => handleSideChange('BUY')}>
+        <SideButton
+          active={side === 'BUY'}
+          $color="#333"
+          onClick={() => handleSideChange('BUY')}
+        >
           구매
         </SideButton>
-        <SideButton active={side === 'SELL'} $color="#2d91ff" onClick={() => handleSideChange('SELL')}>
+        <SideButton
+          active={side === 'SELL'}
+          $color="#2d91ff"
+          onClick={() => handleSideChange('SELL')}
+        >
           판매
         </SideButton>
       </ButtonGroup>
 
       <ButtonGroup>
-        <PriceTypeButton active={priceType === 'limit'} color="#444" onClick={() => handlePriceTypeChange('limit')}>
+        <PriceTypeButton
+          active={priceType === 'limit'}
+          color="#444"
+          onClick={() => handlePriceTypeChange('limit')}
+        >
           지정가
         </PriceTypeButton>
-        <PriceTypeButton active={priceType === 'market'} color="#222" onClick={() => handlePriceTypeChange('market')}>
+        <PriceTypeButton
+          active={priceType === 'market'}
+          color="#222"
+          onClick={() => handlePriceTypeChange('market')}
+        >
           시장가
         </PriceTypeButton>
       </ButtonGroup>
@@ -104,7 +121,8 @@ const OrderContainer = styled.div`
   border-radius: 24px;
   box-shadow: 0 2px 40px rgba(0, 0, 0, 0.05);
   padding: 24px 40px 24px 24px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
 `;
 
 const Title = styled.h3`
