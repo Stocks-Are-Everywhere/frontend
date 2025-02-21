@@ -1,26 +1,21 @@
-// src/components/OrderBook.tsx
-
 import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import WebSocketService from '../services/WebSocketService';
 import { OrderBookData, PriceLevel } from '../types/orderbook';
-// 체결 데이터 관련 타입은 그대로 유지 (나중에 사용 가능)
 import { TradeData } from '../types/TradeOrder';
 
 const OrderBook: React.FC = () => {
-  // 호가 데이터
   const [orderBook, setOrderBook] = useState<OrderBookData | null>(null);
-  // 체결 데이터 목록 (추후 필요 시 활용)
   const [tradeList, setTradeList] = useState<TradeData[]>([]);
-
+  
   // 이전 호가 스냅샷
   const prevOrderBook = useRef<OrderBookData | null>(null);
   // 이전 가격
   const prevPrice = useRef<number | null>(null);
-
+  
   // WebSocket 싱글턴
   const webSocketService = WebSocketService.getInstance();
-
+  
   // 가격 변동 추적
   const getPriceChange = (
     current: PriceLevel,
@@ -32,7 +27,7 @@ const OrderBook: React.FC = () => {
     return 'none';
   };
 
-  // 수량 변동 추적 (totalQuantity 사용)
+  // 수량 변동 추적
   const getQuantityChange = (
     current: PriceLevel,
     previous: PriceLevel | undefined
@@ -86,17 +81,20 @@ const OrderBook: React.FC = () => {
     prevPrice.current = orderBook?.currentPrice ?? null;
   }, [orderBook?.currentPrice]);
 
-  // WebSocket 연결 & 데이터 수신
+  // WebSocket 연결 및 데이터 수신, 로그 출력
   useEffect(() => {
     webSocketService.connect();
 
     webSocketService.subscribe('/topic/orderbook/005930', (data: any) => {
+      console.log('[WebSocket] Received data:', data);
+
       // 연결 성공 메시지
       if (data.message === 'WebSocket connection successful') {
+        console.log('[WebSocket] Connection successful');
         return;
       }
 
-      // 1) 호가 데이터인 경우(sellLevels나 buyLevels가 있으면)
+      // 1) 호가 데이터인 경우 (sellLevels나 buyLevels가 있으면)
       if (data.sellLevels || data.buyLevels) {
         const currentPrice = calculateCurrentPrice(data);
         const prevPriceValue = prevOrderBook.current
@@ -111,26 +109,29 @@ const OrderBook: React.FC = () => {
           prevPrice: prevPriceValue ?? 0,
         };
 
-        prevOrderBook.current = orderBook;
-        setOrderBook(enrichedData);
+        // 함수형 업데이트를 통해 이전 상태를 정확히 저장
+        setOrderBook((prev) => {
+          prevOrderBook.current = prev;
+          return enrichedData;
+        });
       }
-      // 2) 체결 데이터인 경우 (현재는 처리하지 않고 pass)
+      // 2) 체결 데이터인 경우
       else if (
         typeof data.price === 'number' &&
         typeof data.quantity === 'number' &&
         data.tradeDateTime
       ) {
-        // 체결 데이터 수신은 유지하되, 화면에 렌더링하지 않음
+        console.log('[WebSocket] Trade data received:', data);
         setTradeList((prev) => [...prev, data]);
       }
     });
 
     return () => {
       webSocketService.disconnect();
+      console.log('[WebSocket] Disconnected');
     };
   }, []);
 
-  // 주문서가 없으면 로딩
   if (!orderBook) {
     return <Container>Loading...</Container>;
   }
@@ -255,21 +256,6 @@ const OrderBook: React.FC = () => {
           })}
         </BidLevels>
       </OrderBookWrapper>
-
-      {/* 체결 데이터는 현재 렌더링하지 않음 */}
-      {/* 추후 필요 시 아래 블록을 활성화할 수 있음 */}
-      {/*
-      <TradesContainer>
-        <h3>체결 리스트</h3>
-        {tradeList.map((trade, idx) => (
-          <TradeItem key={idx}>
-            <span>체결가: {trade.price.toLocaleString()}</span>
-            <span>체결량: {trade.quantity.toLocaleString()}</span>
-            <span>체결시간: {trade.tradeDateTime}</span>
-          </TradeItem>
-        ))}
-      </TradesContainer>
-      */}
     </Container>
   );
 };
@@ -532,5 +518,4 @@ const Divider = styled.hr`
   border-top: 1px solid #eee;
 `;
 
-/* 체결 데이터 관련 스타일은 추후 필요 시 사용 */
 export default OrderBook;
