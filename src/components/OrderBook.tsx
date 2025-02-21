@@ -4,18 +4,42 @@ import WebSocketService from '../services/WebSocketService';
 import { OrderBookData, PriceLevel } from '../types/orderbook';
 import { TradeHistory } from '../types/tradehistory';
 
+const FIXED_ROW_COUNT = 10; // 항상 보여줄 호가 라인 수
+
+/**
+ * 호가 배열을 FIXED_ROW_COUNT(10)개로 맞춰주는 함수
+ * - 10개보다 많으면 필요한 만큼 잘라냄
+ * - 10개보다 적으면 placeholder(0)로 채움
+ */
+function adjustLevels(levels: PriceLevel[], count: number): PriceLevel[] {
+  if (levels.length > count) {
+    // 뒤에서부터 count개만
+    return levels.slice(-count);
+  } else if (levels.length < count) {
+    // 부족하면 placeholder 생성
+    const placeholders = Array.from({ length: count - levels.length }, () => ({
+      price: 0,
+      totalQuantity: 0,
+      orderCount: 0,
+    }));
+    // placeholders를 앞쪽에 붙여 실제 데이터가 뒤쪽(아래쪽)에 위치하게 함
+    return [...placeholders, ...levels];
+  }
+  return levels;
+}
+
 const OrderBook: React.FC = () => {
   const [orderBook, setOrderBook] = useState<OrderBookData | null>(null);
   const [tradeList, setTradeList] = useState<TradeHistory[]>([]);
-  
+
   // 이전 호가 스냅샷
   const prevOrderBook = useRef<OrderBookData | null>(null);
   // 이전 가격
   const prevPrice = useRef<number | null>(null);
-  
+
   // WebSocket 싱글턴
   const webSocketService = WebSocketService.getInstance();
-  
+
   // 가격 변동 추적
   const getPriceChange = (
     current: PriceLevel,
@@ -81,7 +105,7 @@ const OrderBook: React.FC = () => {
     prevPrice.current = orderBook?.currentPrice ?? null;
   }, [orderBook?.currentPrice]);
 
-  // WebSocket 연결 및 데이터 수신, 로그 출력
+  // WebSocket 연결 및 데이터 수신
   useEffect(() => {
     webSocketService.connect();
 
@@ -101,10 +125,14 @@ const OrderBook: React.FC = () => {
           ? calculateCurrentPrice(prevOrderBook.current)
           : currentPrice;
 
+        // 10개씩 고정하기 위해 호가 배열을 adjustLevels로 가공
+        const fixedSellLevels = adjustLevels(data.sellLevels ?? [], FIXED_ROW_COUNT);
+        const fixedBuyLevels = adjustLevels(data.buyLevels ?? [], FIXED_ROW_COUNT);
+
         const enrichedData: OrderBookData = {
           ...data,
-          sellLevels: data.sellLevels ?? [],
-          buyLevels: data.buyLevels ?? [],
+          sellLevels: fixedSellLevels,
+          buyLevels: fixedBuyLevels,
           currentPrice: currentPrice ?? 0,
           prevPrice: prevPriceValue ?? 0,
         };
@@ -152,19 +180,27 @@ const OrderBook: React.FC = () => {
             const priceChange = getPriceChange(level, prevLevel);
             const quantityChange = getQuantityChange(level, prevLevel);
 
+            // placeholder 여부 (price, totalQuantity, orderCount 모두 0)
+            const isPlaceholder =
+              level.price === 0 &&
+              level.totalQuantity === 0 &&
+              level.orderCount === 0;
+
             return (
               <PriceLevelRow key={`sell-${index}`}>
                 <QuantityBar
                   type="ask"
-                  width={getQuantityPercentage(level.totalQuantity)}
+                  width={isPlaceholder ? 0 : getQuantityPercentage(level.totalQuantity)}
                 />
                 <PriceLevelContent>
                   <Quantity changed={quantityChange}>
-                    {level.totalQuantity.toLocaleString()}
-                    <QuantityTooltip>{`${level.orderCount}건`}</QuantityTooltip>
+                    {isPlaceholder ? '' : level.totalQuantity.toLocaleString()}
+                    {!isPlaceholder && (
+                      <QuantityTooltip>{`${level.orderCount}건`}</QuantityTooltip>
+                    )}
                   </Quantity>
                   <Price type="ask" changed={priceChange}>
-                    {level.price.toLocaleString()}
+                    {isPlaceholder ? '' : level.price.toLocaleString()}
                   </Price>
                 </PriceLevelContent>
               </PriceLevelRow>
@@ -234,21 +270,28 @@ const OrderBook: React.FC = () => {
             const priceChange = getPriceChange(level, prevLevel);
             const quantityChange = getQuantityChange(level, prevLevel);
 
+            const isPlaceholder =
+              level.price === 0 &&
+              level.totalQuantity === 0 &&
+              level.orderCount === 0;
+
             return (
               <PriceLevelRow key={`buy-${index}`}>
                 <QuantityBar
                   type="bid"
-                  width={getQuantityPercentage(level.totalQuantity)}
+                  width={isPlaceholder ? 0 : getQuantityPercentage(level.totalQuantity)}
                 />
                 <PriceLevelContent>
                   <Quantity changed={quantityChange}>
-                    {level.totalQuantity.toLocaleString()}
-                    <QuantityTooltip>
-                      {formatTooltipContent(level.orderCount)}
-                    </QuantityTooltip>
+                    {isPlaceholder ? '' : level.totalQuantity.toLocaleString()}
+                    {!isPlaceholder && (
+                      <QuantityTooltip>
+                        {formatTooltipContent(level.orderCount)}
+                      </QuantityTooltip>
+                    )}
                   </Quantity>
                   <Price type="bid" changed={priceChange}>
-                    {level.price.toLocaleString()}
+                    {isPlaceholder ? '' : level.price.toLocaleString()}
                   </Price>
                 </PriceLevelContent>
               </PriceLevelRow>
