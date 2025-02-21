@@ -1,8 +1,21 @@
 // src/components/TradeHistoryList.tsx
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { TradeHistory } from '../types/tradehistory';
 import WebSocketService from '../services/WebSocketService';
+
+// 1) 카드 전체 배경이 빨간색 → 원래 색(#f9fafb)으로 전환되는 애니메이션
+const flashItemRed = keyframes`
+  0% {
+    background-color: #ff6b6b; /* 처음엔 빨간 배경 */
+  }
+  70% {
+    background-color: #f9fafb; 
+  }
+  100% {
+    background-color: #f9fafb; 
+  }
+`;
 
 const TradeHistoryList: React.FC = () => {
   const [trades, setTrades] = useState<TradeHistory[]>([]);
@@ -19,7 +32,8 @@ const TradeHistoryList: React.FC = () => {
         typeof data.quantity === 'number' &&
         data.tradeDateTime
       ) {
-        setTrades(prevTrades => [data, ...prevTrades]); // 최신 체결 데이터를 상단에 추가
+        // 최신 주문을 맨 위에 추가 (필요하다면 최대 10개로 제한)
+        setTrades(prevTrades => [data, ...prevTrades].slice(0, 10));
       }
     });
 
@@ -82,6 +96,25 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
+const Header = styled.div`
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const Title = styled.h2`
+  font-size: 20px;
+  font-weight: 600;
+  color: #191f28;
+  margin: 0;
+`;
+
+const UpdateTime = styled.span`
+  font-size: 12px;
+  color: #8b95a1;
+`;
+
 const ScrollableWrapper = styled.div`
   flex: 1;
   overflow-y: auto;
@@ -102,25 +135,6 @@ const ScrollableWrapper = styled.div`
   }
 `;
 
-const Header = styled.div`
-  margin-bottom: 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const Title = styled.h2`
-  font-size: 20px;
-  font-weight: 600;
-  color: #191f28;
-  margin: 0;
-`;
-
-const UpdateTime = styled.span`
-  font-size: 12px;
-  color: #8b95a1;
-`;
-
 const TradeWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -128,11 +142,14 @@ const TradeWrapper = styled.div`
   padding-right: 8px;
 `;
 
+// 2) 애니메이션을 TradeItem 전체에 적용
 const TradeItem = styled.div`
   background: #f9fafb;
   border-radius: 16px;
   padding: 20px;
   transition: all 0.2s ease;
+  /* flashItemRed 애니메이션 적용 */
+  animation: ${flashItemRed} 1.5s ease-out forwards;
 
   &:hover {
     background: #f3f4f6;

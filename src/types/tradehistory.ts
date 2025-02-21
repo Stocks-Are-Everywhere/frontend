@@ -1,5 +1,5 @@
 export interface TradeHistory {
-    price: number;
-    quantity: number;
-    tradeDateTime: string;
+  price: number;
+  quantity: number;
+  tradeDateTime: string;
 }
