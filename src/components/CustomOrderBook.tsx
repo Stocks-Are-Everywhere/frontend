@@ -192,7 +192,7 @@ const SubmitButton = styled.button<{ side: OrderSide }>`
   padding: 16px;
   border: none;
   border-radius: 12px;
-  background: skyblue;
+  background: #3180f3; /* 선택한 색상 HEX #3180f3 */
   color: #fff;
   font-size: 18px;
   font-weight: 700;
@@ -200,7 +200,7 @@ const SubmitButton = styled.button<{ side: OrderSide }>`
   transition: all 0.3s ease;
 
   &:hover {
-    background: #87cefa;
+    background: #2270d0; /* hover 시 약간 어두운 색상 */
     transform: translateY(-5px);
   }
 `;
