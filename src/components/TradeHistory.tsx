@@ -1,3 +1,5 @@
+// src/components/TradeHistoryList.tsx
+
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { TradeHistory } from '../types/tradehistory';
@@ -7,26 +9,6 @@ const TradeHistoryList: React.FC = () => {
   const [trades, setTrades] = useState<TradeHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // useEffect(() => {
-  //   const fetchTradeHistory = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const { data } = await axiosInstance.get('/tradehistory');
-  //       console.log('Received data:', data); // 데이터 확인용 로그
-  //       setTrades(data);
-  //     } catch (error) {
-  //       setError('거래 내역을 불러오는데 실패했습니다.');
-  //       console.error('Failed to fetch trade history:', error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   fetchTradeHistory();
-  //   const interval = setInterval(fetchTradeHistory, 5000);
-  //   return () => clearInterval(interval);
-  // }, []);
 
   useEffect(() => {
     const fetchTradeHistory = async () => {
@@ -44,7 +26,7 @@ const TradeHistoryList: React.FC = () => {
     };
 
     fetchTradeHistory(); // 컴포넌트 마운트 시 1회만 실행
-  }, []); // 빈 의존성 배열
+  }, []);
 
   if (isLoading) {
     return <LoadingSpinner>Loading...</LoadingSpinner>;
@@ -64,33 +46,25 @@ const TradeHistoryList: React.FC = () => {
       </Header>
       <ScrollableWrapper>
         <TradeWrapper>
-          {trades.map((trade) => (
-            <TradeItem key={trade.id}>
+          {trades.map((trade, index) => (
+            <TradeItem key={index}>
               <TradeHeader>
-                <OrderInfo>
-                  <OrderNumber>#{trade.sellOrderId}</OrderNumber>
-                  <OrderTime>14:30:25</OrderTime>
-                </OrderInfo>
+                <TradeDate>{trade.tradeDateTime}</TradeDate>
                 <StatusBadge>체결완료</StatusBadge>
               </TradeHeader>
               <TradeContent>
                 <PriceInfo>
                   <Label>체결가격</Label>
-                  <Price>{trade.price?.toLocaleString() ?? '0'}원</Price>
+                  <Price>{trade.price.toLocaleString()}원</Price>
                 </PriceInfo>
                 <QuantityInfo>
                   <Label>체결수량</Label>
-                  <Quantity>
-                    {trade.quantity?.toLocaleString() ?? '0'}주
-                  </Quantity>
+                  <Quantity>{trade.quantity.toLocaleString()}주</Quantity>
                 </QuantityInfo>
                 <TotalInfo>
                   <Label>총 체결금액</Label>
                   <TotalAmount>
-                    {(
-                      (trade.price ?? 0) * (trade.quantity ?? 0)
-                    ).toLocaleString()}
-                    원
+                    {(trade.price * trade.quantity).toLocaleString()}원
                   </TotalAmount>
                 </TotalInfo>
               </TradeContent>
@@ -104,7 +78,7 @@ const TradeHistoryList: React.FC = () => {
 
 const Container = styled.div`
   width: 360px;
-  height: 420px; // 고정 높이 설정
+  height: 420px;
   margin: 20px auto;
   background: white;
   border-radius: 24px;
@@ -195,21 +169,10 @@ const TradeHeader = styled.div`
   margin-bottom: 16px;
 `;
 
-const OrderInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const OrderNumber = styled.span`
+const TradeDate = styled.span`
   font-size: 14px;
   font-weight: 600;
   color: #4e5968;
-`;
-
-const OrderTime = styled.span`
-  font-size: 12px;
-  color: #8b95a1;
 `;
 
 const StatusBadge = styled.span`

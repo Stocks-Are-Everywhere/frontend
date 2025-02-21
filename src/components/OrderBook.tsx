@@ -2,11 +2,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import WebSocketService from '../services/WebSocketService';
 import { OrderBookData, PriceLevel } from '../types/orderbook';
-import { TradeData } from '../types/TradeOrder';
+import { TradeHistory } from '../types/tradehistory';
 
 const OrderBook: React.FC = () => {
   const [orderBook, setOrderBook] = useState<OrderBookData | null>(null);
-  const [tradeList, setTradeList] = useState<TradeData[]>([]);
+  const [tradeList, setTradeList] = useState<TradeHistory[]>([]);
   
   // 이전 호가 스냅샷
   const prevOrderBook = useRef<OrderBookData | null>(null);
