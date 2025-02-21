@@ -1,40 +1,32 @@
 // src/components/TradeHistoryList.tsx
-
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { TradeHistory } from '../types/tradehistory';
-import axiosInstance from '../api/AxiosInstance';
+import WebSocketService from '../services/WebSocketService';
 
 const TradeHistoryList: React.FC = () => {
   const [trades, setTrades] = useState<TradeHistory[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchTradeHistory = async () => {
-      try {
-        setIsLoading(true);
-        const { data } = await axiosInstance.get('/api/order/tradehistory');
-        console.log('Received data:', data);
-        setTrades(data);
-      } catch (error) {
-        setError('거래 내역을 불러오는데 실패했습니다.');
-        console.error('Failed to fetch trade history:', error);
-      } finally {
-        setIsLoading(false);
+    const webSocketService = WebSocketService.getInstance();
+    webSocketService.connect();
+
+    // 웹소켓 채널에 체결 데이터를 구독합니다.
+    webSocketService.subscribe('/topic/trades', (data: any) => {
+      // data가 체결 데이터 형식을 갖추었는지 확인 후 state 업데이트
+      if (
+        typeof data.price === 'number' &&
+        typeof data.quantity === 'number' &&
+        data.tradeDateTime
+      ) {
+        setTrades(prevTrades => [data, ...prevTrades]); // 최신 체결 데이터를 상단에 추가
       }
+    });
+
+    return () => {
+      webSocketService.disconnect();
     };
-
-    fetchTradeHistory(); // 컴포넌트 마운트 시 1회만 실행
   }, []);
-
-  if (isLoading) {
-    return <LoadingSpinner>Loading...</LoadingSpinner>;
-  }
-
-  if (error) {
-    return <ErrorMessage>{error}</ErrorMessage>;
-  }
 
   return (
     <Container>
@@ -108,20 +100,6 @@ const ScrollableWrapper = styled.div`
     background-color: #d1d5db;
     border-radius: 3px;
   }
-`;
-
-const LoadingSpinner = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  color: #8b95a1;
-`;
-
-const ErrorMessage = styled.div`
-  color: #ef4444;
-  text-align: center;
-  padding: 20px;
 `;
 
 const Header = styled.div`
