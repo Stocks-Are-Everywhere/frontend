@@ -32,7 +32,7 @@ const TradeHistoryList: React.FC = () => {
     const fetchTradeHistory = async () => {
       try {
         setIsLoading(true);
-        const { data } = await axiosInstance.get('/tradehistory');
+        const { data } = await axiosInstance.get('/api/order/tradehistory');
         console.log('Received data:', data);
         setTrades(data);
       } catch (error) {
