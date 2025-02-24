@@ -9,20 +9,34 @@ export type PriceType = 'limit' | 'market';
 const CustomOrderBook: React.FC = () => {
   const [side, setSide] = useState<OrderSide>('BUY');
   const [priceType, setPriceType] = useState<PriceType>('limit');
-  const [price, setPrice] = useState<number>(0);
-  const [quantity, setQuantity] = useState<number>(0);
+  // 숫자가 아닌 문자열로 관리
+  const [price, setPrice] = useState<string>('');
+  const [quantity, setQuantity] = useState<string>('');
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSideChange = (newSide: OrderSide) => setSide(newSide);
   const handlePriceTypeChange = (newPriceType: PriceType) => setPriceType(newPriceType);
 
+  // price, quantity 인풋을 문자열로 업데이트
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPrice(e.target.value);
+  };
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuantity(e.target.value);
+  };
+
   const handleSubmit = async () => {
+    // 제출 시점에만 숫자로 변환
+    const parsedPrice = priceType === 'limit' && price ? parseFloat(price) : 0;
+    const parsedQuantity = quantity ? parseFloat(quantity) : 0;
+
     const orderRequest: OrderRequest = {
       companyCode: 'COMP002',
       type: side,
-      quantity,
-      price: priceType === 'limit' ? price : 0,
+      quantity: parsedQuantity,
+      price: parsedPrice,
       userId: 1,
     };
 
@@ -30,7 +44,7 @@ const CustomOrderBook: React.FC = () => {
       await submitOrder(orderRequest);
       setSuccessMessage('주문이 성공적으로 제출되었습니다.');
       setErrorMessage(null);
-      // 2초 후에 성공 메시지를 숨깁니다.
+      // 1초 후에 성공 메시지를 숨김
       setTimeout(() => {
         setSuccessMessage(null);
       }, 1000);
@@ -65,10 +79,11 @@ const CustomOrderBook: React.FC = () => {
       {priceType === 'limit' && (
         <InputGroup>
           <Label>가격</Label>
+          {/* value, onChange를 문자열 상태로 바꾼다 */}
           <Input
             type="number"
             value={price}
-            onChange={(e) => setPrice(Number(e.target.value))}
+            onChange={handlePriceChange}
             placeholder="0"
           />
         </InputGroup>
@@ -79,7 +94,7 @@ const CustomOrderBook: React.FC = () => {
         <Input
           type="number"
           value={quantity}
-          onChange={(e) => setQuantity(Number(e.target.value))}
+          onChange={handleQuantityChange}
           placeholder="0"
         />
       </InputGroup>
@@ -96,7 +111,7 @@ const CustomOrderBook: React.FC = () => {
 
 export default CustomOrderBook;
 
-// Styled Components
+// Styled Components ...
 const OrderContainer = styled.div`
   width: 360px;
   margin: 20px auto;
@@ -192,7 +207,7 @@ const SubmitButton = styled.button<{ side: OrderSide }>`
   padding: 16px;
   border: none;
   border-radius: 12px;
-  background: #3180f3; /* 선택한 색상 HEX #3180f3 */
+  background: #3180f3;
   color: #fff;
   font-size: 18px;
   font-weight: 700;
@@ -200,7 +215,7 @@ const SubmitButton = styled.button<{ side: OrderSide }>`
   transition: all 0.3s ease;
 
   &:hover {
-    background: #2270d0; /* hover 시 약간 어두운 색상 */
+    background: #2270d0;
     transform: translateY(-5px);
   }
 `;
