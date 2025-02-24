@@ -1,6 +1,7 @@
 // Header.tsx
 import React from 'react';
 import styled from 'styled-components';
+import ProfileMenu from './ProfileMenu';
 
 const Header: React.FC = () => {
   return (
@@ -18,13 +19,14 @@ const Header: React.FC = () => {
         </NavSection>
 
         <UserSection>
+          
           <Balance>
             <BalanceLabel>투자자산</BalanceLabel>
             <BalanceAmount>1,000,000원</BalanceAmount>
           </Balance>
-          <UserProfile>
-            <ProfileImage src="/images/default-profile.png" />
-          </UserProfile>
+        
+          <ProfileMenu />
+        
         </UserSection>
       </HeaderContent>
     </HeaderContainer>
@@ -103,20 +105,6 @@ const BalanceAmount = styled.div`
   font-size: 16px;
   font-weight: 700;
   color: #333d4b;
-`;
-
-const UserProfile = styled.div`
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: #f2f2f2;
-`;
-
-const ProfileImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 `;
 
 export default Header;
