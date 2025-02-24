@@ -1,8 +1,10 @@
-import { OrderRequest } from "../types/customerorderbook";
+import { OrderRequest } from '../types/customerorderbook';
 
-export const submitOrder = async (orderRequest: OrderRequest): Promise<void> => {
+export const submitOrder = async (
+  orderRequest: OrderRequest
+): Promise<void> => {
   try {
-    const response = await fetch('http://localhost:8080/api/v1/orders', {
+    const response = await fetch('http://localhost:8080/api/order', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
