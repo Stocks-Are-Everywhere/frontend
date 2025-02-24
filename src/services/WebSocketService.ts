@@ -1,11 +1,10 @@
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { OrderBookData } from '../types/orderbook';
 
-class WebSocketService {
-  private static instance: WebSocketService;
+class WebSocketService<T> {
+  private static instances: Map<string, WebSocketService<any>> = new Map();
   private client: Client;
-  private subscriptions: Map<string, (data: any) => void>;
+  private subscriptions: Map<string, (data: T) => void>;
 
   private constructor() {
     this.subscriptions = new Map();
@@ -29,11 +28,11 @@ class WebSocketService {
     };
   }
 
-  public static getInstance(): WebSocketService {
-    if (!WebSocketService.instance) {
-      WebSocketService.instance = new WebSocketService();
+  public static getInstance<T>(key: string): WebSocketService<T> {
+    if (!this.instances.has(key)) {
+      this.instances.set(key, new WebSocketService<T>());
     }
-    return WebSocketService.instance;
+    return this.instances.get(key) as WebSocketService<T>;
   }
 
   public connect(): void {
@@ -44,10 +43,7 @@ class WebSocketService {
     this.client.deactivate();
   }
 
-  public subscribe(
-    topic: string,
-    callback: (data: OrderBookData) => void
-  ): void {
+  public subscribe(topic: string, callback: (data: T) => void): void {
     this.subscriptions.set(topic, callback);
 
     if (this.client.connected) {
@@ -61,10 +57,7 @@ class WebSocketService {
     });
   }
 
-  private subscribeToTopic(
-    topic: string,
-    callback: (data: OrderBookData) => void
-  ): void {
+  private subscribeToTopic(topic: string, callback: (data: T) => void): void {
     this.client.subscribe(topic, (message) => {
       const data = JSON.parse(message.body);
       callback(data);
