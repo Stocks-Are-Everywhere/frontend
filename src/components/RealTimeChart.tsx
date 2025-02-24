@@ -17,6 +17,7 @@ const RealTimeChart: React.FC = () => {
   const currentCandle = useRef<ChartData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
 
   // 전일 데이터
   const [prevClose, setPrevClose] = useState<number | null>(null);
@@ -81,7 +82,7 @@ const RealTimeChart: React.FC = () => {
         borderColor: '#ddd',
         scaleMargins: {
           top: 0.1,
-          bottom: 0.1,
+          bottom: 0.2,
         },
         autoScale: true, // 자동 스케일링 활성화
       },
@@ -100,11 +101,32 @@ const RealTimeChart: React.FC = () => {
     // 캔들스틱 시리즈 생성
     const series = chart.addCandlestickSeries({
       upColor: '#ef5350', // 양봉 색상 (상승)
-      downColor: '#26a69a', // 음봉 색상 (하락)
+      downColor: '#5294f3', // 음봉 색상 (하락)
       borderVisible: false,
       wickUpColor: '#ef5350',
-      wickDownColor: '#26a69a',
+      wickDownColor: '#5294f3',
     });
+
+    // Volume 시리즈 추가
+    const volumeSeries = chart.addHistogramSeries({
+      color: '#82b0f2',
+      priceScaleId: 'volume',
+      scaleMargins: {
+        top: 0.85, // 차트의 하단 15% 사용
+        bottom: 0.05,
+      },
+    });
+    volumeSeriesRef.current = volumeSeries;
+
+    const volumeData = chartData.map((d) => ({
+      time: d.time,
+      value: d.volume,
+      color:
+        d.close >= d.open
+          ? 'rgba(239, 83, 80, 0.5)'
+          : 'rgba(82, 148, 243, 0.5)',
+    }));
+    volumeSeries.setData(volumeData);
 
     candlestickSeriesRef.current = series;
     series.setData(chartData);
@@ -148,6 +170,13 @@ const RealTimeChart: React.FC = () => {
 
       currentCandle.current = updatedCandle;
       candlestickSeriesRef.current.update(updatedCandle);
+      if (volumeSeriesRef.current) {
+        volumeSeriesRef.current.update({
+          time: updatedCandle.time,
+          value: updatedCandle.volume,
+          color: '#82b0f2',
+        });
+      }
     }
   }, []);
 
@@ -199,7 +228,8 @@ const RealTimeChart: React.FC = () => {
     if (!previousCandle) return '#333';
 
     if (currentCandle.current.close > previousCandle.close) return '#ef5350'; // 상승
-    if (currentCandle.current.close < previousCandle.close) return '#26a69a'; // 하락
+    if (currentCandle.current.close < previousCandle.close)
+      return 'rgba(82, 148, 243)'; // 하락
     return '#333'; // 변동 없음
   };
 
@@ -290,7 +320,7 @@ const RealTimeChart: React.FC = () => {
       <ChartFooter>
         <Legend>
           <LegendItem color="#ef5350">상승</LegendItem>
-          <LegendItem color="#26a69a">하락</LegendItem>
+          <LegendItem color="rgba(82, 148, 243)">하락</LegendItem>
         </Legend>
         <ChartInfo>
           <small>15초 간격 캔들 차트 | 최근 30개 캔들 표시</small>
@@ -372,7 +402,7 @@ const Value = styled.span`
 const ChangeValue = styled.span<{ positive: boolean }>`
   font-size: 16px;
   font-weight: 600;
-  color: ${(props) => (props.positive ? '#ef5350' : '#26a69a')};
+  color: ${(props) => (props.positive ? '#ef5350' : 'rgba(82, 148, 243)')};
 `;
 
 const ErrorMessage = styled.div`

@@ -210,7 +210,7 @@ const SubmitButton = styled.button<{ side: OrderSide }>`
   padding: 16px;
   border: none;
   border-radius: 12px;
-  background: skyblue;
+  background: #5294f3;
   color: #fff;
   font-size: 18px;
   font-weight: 700;
@@ -218,7 +218,7 @@ const SubmitButton = styled.button<{ side: OrderSide }>`
   transition: all 0.3s ease;
 
   &:hover {
-    background: #87cefa;
+    background: #5294f3;
     transform: translateY(-5px);
   }
 `;
