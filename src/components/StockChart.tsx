@@ -14,17 +14,18 @@ function StockChart({companyCode}: ChartProps) {
     const [stockData, setStockData] = useState<Distribution[]>([]);
     const [companyName, setCompanyName] = useState<string>();
     const price = useStockPrice(companyCode);
-    const today = new Date()
+    const today = new Date('2025-02-24 11:00:00')
     
     const generateData = async () => {
       try {
         const data: Distribution[] = [];
-        for(let i = 0; i < 4; i++) {
+        for(let i = 0; i < 2; i++) {
           const adjustedTime = new Date(today.getTime() - i * 30 * 60 * 1000);
           const hours = adjustedTime.getHours();
           const minutes = adjustedTime.getMinutes().toString().padStart(2, "0");
           const formattedDate = `${hours}${minutes}00`;
           let res = await getTodayDistributionChart(formattedDate, companyCode);
+          console.log(res.output2);
           let distribuitionData : DistributionResFromApi[] = res.output2;
           const stockList: Distribution[] = distribuitionData.map((d: DistributionResFromApi) => ({
             time: new Date(`${d.stck_bsop_date.substring(0, 4)}-${d.stck_bsop_date.substring(4, 6)}-${d.stck_bsop_date.substring(6, 8)}T${d.stck_cntg_hour.substring(0, 2)}:${d.stck_cntg_hour.substring(2, 4)}:${d.stck_cntg_hour.substring(4, 6)}`).toISOString(), 

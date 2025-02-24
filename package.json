@@ -47,5 +47,5 @@
     "@types/jest": "^29.5.14",
     "@types/sockjs-client": "^1.5.4"
   },
-  "proxy": "https://openapivts.koreainvestment.com:29443"
+  "proxy": "http://localhost:8080"
 }
