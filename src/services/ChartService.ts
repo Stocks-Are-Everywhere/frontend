@@ -12,7 +12,7 @@ export const getTodayDistributionChart = async (time: string, companyCode: strin
             "FID_ETC_CLS_CODE": "",
             "FID_COND_MRKT_DIV_CODE": "J",
             "FID_INPUT_ISCD": companyCode,
-            "FID_INPUT_HOUR_1": "092800",
+            "FID_INPUT_HOUR_1": time,
             "FID_PW_DATA_INCU_YN": "Y"
         }
     })

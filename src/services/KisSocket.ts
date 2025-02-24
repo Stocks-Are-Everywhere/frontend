@@ -5,7 +5,7 @@ function parseMessage(res: string) {
 }
 
 const useStockPrice = (companyCode: string) => {
-  const [price, setPrice] = useState<number | 0>(0);
+    const [price, setPrice] = useState<number | 0>(0);
   const socketUrl = "ws://ops.koreainvestment.com:31000";
 
   useEffect(() => {
@@ -16,17 +16,17 @@ const useStockPrice = (companyCode: string) => {
 
       // API 요구사항에 맞게 구독 요청을 보냅니다.
       const subscribeMessage = {
-        header: {
-            "approval_key": process.env.REACT_APPROVAL_KEY,
-            "custtype":"P",
-            "tr_type":"1",
-            "content-type":"utf-8"
+        "header": {
+            "approval_key": process.env.REACT_APP_APPROVAL_KEY,
+            "custtype": "P",
+            "tr_type": "1",
+            "content-type": "utf-8"
         },
         "body": {
             "input":
             {
-                     "tr_id":"H0STCNT0",
-                     "tr_key":companyCode
+                     "tr_id": "H0STCNT0",
+                     "tr_key": companyCode
             }
         }
       };
