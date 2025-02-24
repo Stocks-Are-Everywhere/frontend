@@ -1,32 +1,14 @@
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
+// src/services/WebSocketService.ts
+
 import { OrderBookData } from '../types/orderbook';
 
 class WebSocketService {
   private static instance: WebSocketService;
-  private client: Client;
+  private socket: WebSocket | null = null;
   private subscriptions: Map<string, (data: any) => void>;
 
   private constructor() {
     this.subscriptions = new Map();
-    this.client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
-      debug: (str) => {
-        console.log(str);
-      },
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-    });
-
-    this.client.onConnect = () => {
-      console.log('Connected to WebSocket');
-      this.subscribeToTopics();
-    };
-
-    this.client.onStompError = (frame) => {
-      console.error('WebSocket Error:', frame);
-    };
   }
 
   public static getInstance(): WebSocketService {
@@ -37,38 +19,51 @@ class WebSocketService {
   }
 
   public connect(): void {
-    this.client.activate();
+    // 순수 WebSocket 연결 (STOMP/SockJS 미사용)
+    this.socket = new WebSocket('ws://localhost:8080/ws/trades');
+
+    this.socket.onopen = () => {
+      console.log('Connected to WebSocket');
+    };
+
+    this.socket.onmessage = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        // 연결 성공 메시지 처리
+        if (data.message === 'WebSocket connection successful') {
+          console.log('WebSocket 연결 성공');
+          // 구독자에게 전달할 필요가 없으면 return
+          // (원한다면 이 메시지도 전달 가능)
+          return;
+        }
+        // 모든 구독자에게 데이터 전달
+        this.subscriptions.forEach((callback) => {
+          callback(data);
+        });
+      } catch (error) {
+        console.error('Error parsing message:', error);
+      }
+    };
+
+    this.socket.onerror = (error) => {
+      console.error('WebSocket Error:', error);
+    };
+
+    this.socket.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
   }
 
   public disconnect(): void {
-    this.client.deactivate();
-  }
-
-  public subscribe(
-    topic: string,
-    callback: (data: OrderBookData) => void
-  ): void {
-    this.subscriptions.set(topic, callback);
-
-    if (this.client.connected) {
-      this.subscribeToTopic(topic, callback);
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
     }
   }
 
-  private subscribeToTopics(): void {
-    this.subscriptions.forEach((callback, topic) => {
-      this.subscribeToTopic(topic, callback);
-    });
-  }
-
-  private subscribeToTopic(
-    topic: string,
-    callback: (data: OrderBookData) => void
-  ): void {
-    this.client.subscribe(topic, (message) => {
-      const data = JSON.parse(message.body);
-      callback(data);
-    });
+  // topic은 인터페이스 호환용이며, 모든 메시지를 단일 채널에서 처리합니다.
+  public subscribe(topic: string, callback: (data: any) => void): void {
+    this.subscriptions.set(topic, callback);
   }
 }
 
