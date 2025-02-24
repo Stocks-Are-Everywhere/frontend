@@ -4,6 +4,7 @@ import OrderBook from '../components/OrderBook';
 import TradeHistoryList from '../components/TradeHistory';
 import StockChart from '../components/StockChart';
 import CustomOrderBook from '../components/CustomOrderBook';
+import RealTimeChart from '../components/RealTimeChart';
 
 const TradingPage: React.FC = () => {
   return (
@@ -11,7 +12,7 @@ const TradingPage: React.FC = () => {
       <ContentGrid>
         <LeftPanel>
           <ChartSection>
-            <StockChart />
+            <RealTimeChart />
           </ChartSection>
         </LeftPanel>
         <CenterPanel>
