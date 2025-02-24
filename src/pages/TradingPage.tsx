@@ -2,7 +2,6 @@ import React from 'react';
 import styled from 'styled-components';
 import OrderBook from '../components/OrderBook';
 import TradeHistoryList from '../components/TradeHistory';
-import StockChart from '../components/StockChart';
 import CustomOrderBook from '../components/CustomOrderBook';
 import RealTimeChart from '../components/RealTimeChart';
 
