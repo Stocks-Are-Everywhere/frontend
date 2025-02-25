@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { Menu, MenuItem, Avatar, IconButton } from "@mui/material";
 import AuthService from "../services/AuthService";
 import styled from 'styled-components';
+import { useNavigate } from "react-router-dom";
 
 const ProfileMenu: React.FC = () => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
+    const navigate = useNavigate();
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -13,6 +15,11 @@ const ProfileMenu: React.FC = () => {
 
     const handleClose = () => {
         setAnchorEl(null);
+    };
+    
+    const handleProfile = () => {
+        handleClose();
+        navigate("/personal");
     };
 
     const handleLogout = () => {
@@ -29,8 +36,7 @@ const ProfileMenu: React.FC = () => {
             </IconButton>
 
             <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-                <MenuItem onClick={handleClose}>프로필</MenuItem>
-                <MenuItem onClick={handleClose}>설정</MenuItem>
+                <MenuItem onClick={handleProfile}>프로필</MenuItem>
                 <MenuItem onClick={handleLogout}>로그아웃</MenuItem>
             </Menu>
 
