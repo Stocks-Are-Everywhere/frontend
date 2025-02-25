@@ -98,6 +98,8 @@ const RealTimeChart: React.FC = () => {
 
     chartRef.current = chart;
 
+    // 상태 저장 함수
+
     // 캔들스틱 시리즈 생성
     const series = chart.addCandlestickSeries({
       upColor: '#ef5350', // 양봉 색상 (상승)
@@ -151,8 +153,11 @@ const RealTimeChart: React.FC = () => {
 
   // WebSocket 이벤트 핸들러
   const handlePriceUpdate = useCallback((data: ChartUpdateData) => {
-    if (currentCandle.current && candlestickSeriesRef.current) {
-      // 현재 캔들 업데이트
+    if (
+      currentCandle.current &&
+      candlestickSeriesRef.current &&
+      chartRef.current
+    ) {
       const updatedCandle = {
         ...currentCandle.current,
         high: Math.max(currentCandle.current.high, data.price),
@@ -161,7 +166,6 @@ const RealTimeChart: React.FC = () => {
         volume: currentCandle.current.volume + data.volume,
       };
 
-      // 차트 데이터 업데이트
       setChartData((prevData) => {
         const newData = [...prevData];
         newData[newData.length - 1] = updatedCandle;
@@ -170,13 +174,8 @@ const RealTimeChart: React.FC = () => {
 
       currentCandle.current = updatedCandle;
       candlestickSeriesRef.current.update(updatedCandle);
-      if (volumeSeriesRef.current) {
-        volumeSeriesRef.current.update({
-          time: updatedCandle.time,
-          value: updatedCandle.volume,
-          color: '#82b0f2',
-        });
-      }
+
+      // 저장된 상태가 있다면 복원
     }
   }, []);
 

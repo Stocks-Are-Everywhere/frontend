@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { submitOrder } from '../services/orderService';
 import { OrderRequest } from '../types/customerorderbook';
+import eventBus from '../util/eventbus';
 
 export type OrderSide = 'BUY' | 'SELL';
 export type PriceType = 'limit' | 'market';
@@ -9,21 +10,51 @@ export type PriceType = 'limit' | 'market';
 const CustomOrderBook: React.FC = () => {
   const [side, setSide] = useState<OrderSide>('BUY');
   const [priceType, setPriceType] = useState<PriceType>('limit');
-  const [price, setPrice] = useState<number>(0);
-  const [quantity, setQuantity] = useState<number>(0);
+  const [price, setPrice] = useState<string>('');
+  const [quantity, setQuantity] = useState<string>('1'); // 기본값 1로 설정
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSideChange = (newSide: OrderSide) => setSide(newSide);
-  const handlePriceTypeChange = (newPriceType: PriceType) =>
+  const handlePriceTypeChange = (newPriceType: PriceType) => {
     setPriceType(newPriceType);
+    // 시장가 선택 시 가격 입력 필드 초기화
+    if (newPriceType === 'market') {
+      setPrice('');
+    }
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '' || /^\d+$/.test(value)) {
+      setPrice(value);
+    }
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '' || /^\d+$/.test(value)) {
+      setQuantity(value);
+    }
+  };
 
   const handleSubmit = async () => {
+    // 입력값 유효성 검사
+    if (priceType === 'limit' && (price === '' || parseInt(price) <= 0)) {
+      setErrorMessage('유효한 가격을 입력해주세요');
+      return;
+    }
+
+    if (quantity === '' || parseInt(quantity) <= 0) {
+      setErrorMessage('유효한 수량을 입력해주세요');
+      return;
+    }
+
     const orderRequest: OrderRequest = {
-      companyCode: 'COMP002',
+      companyCode: '005930',
       type: side,
-      quantity,
-      price: priceType === 'limit' ? price : 0,
+      quantity: parseInt(quantity),
+      price: priceType === 'limit' ? parseInt(price) : 0,
       userId: 1,
     };
 
@@ -31,6 +62,21 @@ const CustomOrderBook: React.FC = () => {
       await submitOrder(orderRequest);
       setSuccessMessage('주문이 성공적으로 제출되었습니다.');
       setErrorMessage(null);
+
+      eventBus.publish('newTrade', {
+        id: Math.floor(Math.random() * 10000),
+        sellOrderId: Math.floor(Math.random() * 10000),
+        buyOrderId: Math.floor(Math.random() * 10000),
+        price: priceType === 'limit' ? parseInt(price) : 0,
+        quantity: parseInt(quantity),
+      });
+
+      // 주문 성공 후 입력 필드 초기화 (선택사항)
+      if (priceType === 'limit') {
+        setPrice('');
+      }
+      setQuantity('1');
+
       // 2초 후에 성공 메시지를 숨깁니다.
       setTimeout(() => {
         setSuccessMessage(null);
@@ -83,10 +129,10 @@ const CustomOrderBook: React.FC = () => {
         <InputGroup>
           <Label>가격</Label>
           <Input
-            type="number"
+            type="text"
             value={price}
-            onChange={(e) => setPrice(Number(e.target.value))}
-            placeholder="0"
+            onChange={handlePriceChange}
+            placeholder="가격을 입력하세요"
           />
         </InputGroup>
       )}
@@ -94,10 +140,10 @@ const CustomOrderBook: React.FC = () => {
       <InputGroup>
         <Label>수량</Label>
         <Input
-          type="number"
+          type="text"
           value={quantity}
-          onChange={(e) => setQuantity(Number(e.target.value))}
-          placeholder="0"
+          onChange={handleQuantityChange}
+          placeholder="수량을 입력하세요"
         />
       </InputGroup>
 

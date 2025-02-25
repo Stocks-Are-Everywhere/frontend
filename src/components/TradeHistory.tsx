@@ -2,32 +2,60 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { TradeHistory } from '../types/tradehistory';
 import axiosInstance from '../api/AxiosInstance';
+import eventbus from '../util/eventbus';
 
 const TradeHistoryList: React.FC = () => {
   const [trades, setTrades] = useState<TradeHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // useEffect(() => {
-  //   const fetchTradeHistory = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const { data } = await axiosInstance.get('/tradehistory');
-  //       console.log('Received data:', data); // 데이터 확인용 로그
-  //       setTrades(data);
-  //     } catch (error) {
-  //       setError('거래 내역을 불러오는데 실패했습니다.');
-  //       console.error('Failed to fetch trade history:', error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
+  useEffect(() => {
+    // 이벤트 구독
+    const unsubscribe = eventbus.subscribe('newTrade', (newTrade) => {
+      setTrades((prevTrades) => [newTrade, ...prevTrades]);
+    });
 
-  //   fetchTradeHistory();
-  //   const interval = setInterval(fetchTradeHistory, 5000);
-  //   return () => clearInterval(interval);
-  // }, []);
+    return () => {
+      unsubscribe(); // 컴포넌트 언마운트 시 구독 해제
+    };
+  }, []);
 
+  useEffect(() => {
+    // 더미 거래 내역 데이터
+    const dummyTrades: TradeHistory[] = [
+      {
+        id: 1,
+        sellOrderId: 1001,
+        buyOrderId: 2001,
+        price: 72500,
+        quantity: 10,
+      },
+      {
+        id: 2,
+        sellOrderId: 1002,
+        buyOrderId: 2002,
+        price: 72300,
+        quantity: 5,
+      },
+      {
+        id: 3,
+        sellOrderId: 1003,
+        buyOrderId: 2003,
+        price: 72600,
+        quantity: 3,
+      },
+    ];
+
+    // 1초 후에 데이터 로딩 완료 (로딩 시뮬레이션)
+    setTimeout(() => {
+      setTrades(dummyTrades);
+      setIsLoading(false);
+    }, 1000);
+  }, []);
+
+  const addNewTrade = (newTrade: TradeHistory) => {
+    setTrades((prevTrades) => [newTrade, ...prevTrades]);
+  };
   useEffect(() => {
     const fetchTradeHistory = async () => {
       try {
