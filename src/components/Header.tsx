@@ -2,13 +2,19 @@
 import React from 'react';
 import styled from 'styled-components';
 import ProfileMenu from './ProfileMenu';
+import { useNavigate } from 'react-router-dom';
 
 const Header: React.FC = () => {
+  const navigate = useNavigate();
+  
+  const handleHome = () => {
+    navigate("/");
+  }
   return (
     <HeaderContainer>
       <HeaderContent>
         <LogoSection>
-          <Logo>온세주</Logo>
+          <Logo onClick={handleHome}>온세주</Logo>
         </LogoSection>
 
         <NavSection>
