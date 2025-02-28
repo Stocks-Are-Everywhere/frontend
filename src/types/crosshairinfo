@@ -1,0 +1,9 @@
+import { Time } from 'lightweight-charts';
+
+export interface CrosshairInfo {
+  x: number;
+  y: number;
+  price: number;
+  volume: number;
+  time: Time;
+}
