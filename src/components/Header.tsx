@@ -1,8 +1,8 @@
-// Header.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import ProfileMenu from './ProfileMenu';
 import { useNavigate } from 'react-router-dom';
+import { getBalance } from '../services/orderService';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -10,6 +10,20 @@ const Header: React.FC = () => {
   const handleHome = () => {
     navigate("/");
   }
+  const [balance, setBalance] = useState<number>(1000000);
+
+  useEffect(() => {
+    // 컴포넌트 마운트 시 초기 잔액 설정
+    setBalance(getBalance());
+
+    // 1초마다 잔액 업데이트 (실시간 반영)
+    const intervalId = setInterval(() => {
+      setBalance(getBalance());
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <HeaderContainer>
       <HeaderContent>
@@ -28,7 +42,7 @@ const Header: React.FC = () => {
           
           <Balance>
             <BalanceLabel>투자자산</BalanceLabel>
-            <BalanceAmount>1,000,000원</BalanceAmount>
+            <BalanceAmount>{balance.toLocaleString()}원</BalanceAmount>
           </Balance>
         
           <ProfileMenu />
@@ -38,6 +52,8 @@ const Header: React.FC = () => {
     </HeaderContainer>
   );
 };
+
+// 스타일 컴포넌트는 그대로 유지
 
 const HeaderContainer = styled.header`
   width: 100%;

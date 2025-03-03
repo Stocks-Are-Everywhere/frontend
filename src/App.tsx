@@ -9,12 +9,12 @@ import styled from "styled-components";
 // Pages
 import AuthPage from "./pages/Auth/AuthPage";
 import HomePage from "./pages/Base/HomePage";
+import TradingPage from "./pages/Base/TradingPage";
 
 // Layouts
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import PersonalPage from "./pages/Base/PersonalPage";
-import OrderPage from "./pages/Base/OrderPage";
 
 
 const App: React.FC = () => {
@@ -29,7 +29,7 @@ const App: React.FC = () => {
         <Routes>
             {/* No Auth */}
             <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
-            <Route path="/order" element={<MainLayout><OrderPage /></MainLayout>} />
+            <Route path="/order" element={<MainLayout><TradingPage /></MainLayout>} />
             <Route path="/personal" element={<MainLayout><PersonalPage /></MainLayout>} />
             {/* Auth */}
             <Route path="/auth" element={<AuthLayout><RedirectIfAuth><AuthPage /></RedirectIfAuth></AuthLayout>} />
