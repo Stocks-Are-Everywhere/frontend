@@ -70,44 +70,25 @@ const StockRanking: React.FC<StockRankingProps> = ({
       <RankingHeader>
         <Title>실시간 순위</Title>
         <TabContainer>
-          <Tab
-            $active={category === 'volume'}
-            onClick={() => handleCategoryChange('volume')}
-          >
-            거래량
-          </Tab>
-          <Tab
-            $active={category === 'change'}
-            onClick={() => handleCategoryChange('change')}
-          >
-            등락률
-          </Tab>
-          <Tab
-            $active={category === 'marketCap'}
-            onClick={() => handleCategoryChange('marketCap')}
-          >
-            시가총액
-          </Tab>
-          <Tab
-            $active={category === 'marketValue'}
-            onClick={() => handleCategoryChange('marketValue')}
-          >
-            시장가치
-          </Tab>
-          <Tab
-            $active={category === 'largeOrders'}
-            onClick={() => handleCategoryChange('largeOrders')}
-          >
-            대량체결
-          </Tab>
+          {['volume', 'change', 'marketCap', 'marketValue', 'largeOrders'].map(
+            (tab) => (
+              <Tab
+                key={tab}
+                $active={category === tab}
+                onClick={() => handleCategoryChange(tab)}
+              >
+                {getCategoryName(tab)}
+              </Tab>
+            )
+          )}
         </TabContainer>
       </RankingHeader>
       <RankingList>
         <RankingListHeader>
-          <span>순위</span>
-          <span>종목명</span>
-          <span>현재가</span>
-          <span>등락률</span>
+          <HeaderCell>순위</HeaderCell>
+          <HeaderCell>종목명</HeaderCell>
+          <HeaderCell align="right">현재가</HeaderCell>
+          <HeaderCell align="right">등락률</HeaderCell>
         </RankingListHeader>
         {rankingData.map((item, index) => (
           <RankingItem key={index}>
@@ -128,25 +109,26 @@ const StockRanking: React.FC<StockRankingProps> = ({
 const RankingContainer = styled.div`
   width: 100%;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 `;
 
 const RankingHeader = styled.div`
-  padding: 20px 20px 0;
+  padding: 24px 24px 0;
 `;
 
 const Title = styled.h2`
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
-  color: #333;
-  margin: 0 0 20px 0;
+  color: #1a1a1a;
+  margin: 0 0 24px 0;
 `;
 
 const TabContainer = styled.div`
   display: flex;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 2px solid #f0f0f0;
+  margin-bottom: -2px;
 `;
 
 const Tab = styled.button<{ $active: boolean }>`
@@ -154,37 +136,41 @@ const Tab = styled.button<{ $active: boolean }>`
   background: none;
   border: none;
   font-size: 16px;
-  font-weight: ${(props) => (props.$active ? '600' : '400')};
-  color: ${(props) => (props.$active ? '#3182f6' : '#666')};
+  font-weight: ${(props) => (props.$active ? '600' : '500')};
+  color: ${(props) => (props.$active ? '#2196f3' : '#666')};
   border-bottom: 2px solid
-    ${(props) => (props.$active ? '#3182f6' : 'transparent')};
+    ${(props) => (props.$active ? '#2196f3' : 'transparent')};
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    color: #3182f6;
+    color: #2196f3;
   }
 `;
 
 const RankingList = styled.div`
-  padding: 0 20px;
+  padding: 0 24px;
 `;
 
 const RankingListHeader = styled.div`
   display: grid;
   grid-template-columns: 60px 2fr 1fr 1fr;
-  padding: 15px 0;
+  padding: 16px 0;
   border-bottom: 1px solid #f0f0f0;
   font-size: 14px;
   color: #888;
-  font-weight: 500;
+  font-weight: 600;
+`;
+
+const HeaderCell = styled.span<{ align?: string }>`
+  text-align: ${(props) => props.align || 'left'};
 `;
 
 const RankingItem = styled.div`
   display: grid;
   grid-template-columns: 60px 2fr 1fr 1fr;
   align-items: center;
-  padding: 15px 0;
+  padding: 16px 0;
   border-bottom: 1px solid #f0f0f0;
 
   &:last-child {
@@ -193,9 +179,9 @@ const RankingItem = styled.div`
 `;
 
 const Rank = styled.span`
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
 `;
 
 const StockName = styled.span`
@@ -207,15 +193,26 @@ const StockName = styled.span`
 const StockPrice = styled.span`
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: #1a1a1a;
   text-align: right;
 `;
 
 const PriceChange = styled.span<{ positive: boolean }>`
   font-size: 16px;
   font-weight: 600;
-  color: ${(props) => (props.positive ? '#ef5350' : '#26a69a')};
+  color: ${(props) => (props.positive ? '#ff5252' : '#4caf50')};
   text-align: right;
 `;
+
+const getCategoryName = (category: string): string => {
+  const categoryNames: { [key: string]: string } = {
+    volume: '거래량',
+    change: '등락률',
+    marketCap: '시가총액',
+    marketValue: '시장가치',
+    largeOrders: '대량체결',
+  };
+  return categoryNames[category] || category;
+};
 
 export default StockRanking;
