@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import ProfileMenu from './ProfileMenu';
+import { useNavigate } from 'react-router-dom';
 import { getBalance } from '../services/orderService';
 import SearchBar from './SearchBar';
 
 const Header: React.FC = () => {
+  const navigate = useNavigate();
+  
+  const handleHome = () => {
+    navigate("/");
+  }
   const [balance, setBalance] = useState<number>(1000000);
 
   useEffect(() => {
@@ -19,7 +26,7 @@ const Header: React.FC = () => {
     <HeaderContainer>
       <HeaderContent>
         <LogoSection>
-          <Logo>온세주</Logo>
+          <Logo onClick={handleHome}>온세주</Logo>
         </LogoSection>
 
         <SearchBarSection>
@@ -34,13 +41,14 @@ const Header: React.FC = () => {
         </NavSection>
 
         <UserSection>
+          
           <Balance>
             <BalanceLabel>투자자산</BalanceLabel>
             <BalanceAmount>{balance.toLocaleString()}원</BalanceAmount>
           </Balance>
-          <UserProfile>
-            <ProfileImage src="/images/default-profile.png" />
-          </UserProfile>
+        
+          <ProfileMenu />
+        
         </UserSection>
       </HeaderContent>
     </HeaderContainer>
@@ -113,6 +121,7 @@ const BalanceAmount = styled.div`
   font-weight: 700;
   color: #333d4b;
 `;
+
 
 const UserProfile = styled.div`
   width: 36px;

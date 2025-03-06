@@ -1,33 +1,52 @@
-import React from 'react';
-import styled from 'styled-components';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { GlobalStyle } from './styles/GlobalStyle';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import HomePage from './pages/HomePage';
-import TradingPage from './pages/TradingPage';
+
+import React, { useEffect } from "react";
+import { Routes, Route, useLocation, useNavigate, Router } from "react-router-dom";
+
+// Components
+import AuthCallbackHandler from "./components/Auth/AuthCallbackHandler";
+import RedirectIfAuth from "./components/Auth/RedirectIfAuth";
+import styled from "styled-components";
+
+// Pages
+import AuthPage from "./pages/Auth/AuthPage";
+import HomePage from "./pages/Base/HomePage";
+import TradingPage from "./pages/Base/TradingPage";
+
+// Layouts
+import MainLayout from "./layouts/MainLayout";
+import AuthLayout from "./layouts/AuthLayout";
+import PersonalPage from "./pages/Base/PersonalPage";
+
 
 const App: React.FC = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    console.log(`Navigated to: ${location.pathname}`);
+  }, [location]);
+
   return (
-    <Router>
-      <GlobalStyle />
-      <Header />
-      <Main>
+    <AppContainer>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/trading/:companyCode" element={<TradingPage />} />
-        </Routes>
-      </Main>
-      <Footer />
-    </Router>
+            {/* No Auth */}
+            <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
+            <Route path="/order:companyCode" element={<MainLayout><TradingPage /></MainLayout>} />
+            <Route path="/personal" element={<MainLayout><PersonalPage /></MainLayout>} />
+            {/* Auth */}
+            <Route path="/auth" element={<AuthLayout><RedirectIfAuth><AuthPage /></RedirectIfAuth></AuthLayout>} />
+            <Route path="/auth/callback" element={<AuthCallbackHandler />} />
+          </Routes>
+    </AppContainer>
   );
 };
 
-const Main = styled.main`
-  flex: 1;
-  width: 100%;
-  background-color: #f5f6f7;
-  padding-top: 80px; /* 헤더 높이에 맞춰 여백 추가 */
-`;
+const AppContainer = styled.div`
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+
+
 
 export default App;

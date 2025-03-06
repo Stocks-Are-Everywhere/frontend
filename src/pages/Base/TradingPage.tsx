@@ -1,9 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
-import OrderBook from '../components/OrderBook';
-import TradeHistoryList from '../components/TradeHistory';
-import CustomOrderBook from '../components/CustomOrderBook';
-import RealTimeChart from '../components/RealTimeChart';
+import OrderBook from '../../components/OrderBook';
+import TradeHistoryList from '../../components/TradeHistory';
+import CustomOrderBook from '../../components/CustomOrderBook';
+import RealTimeChart from '../../components/RealTimeChart';
 
 const TradingPage: React.FC = () => {
   return (
