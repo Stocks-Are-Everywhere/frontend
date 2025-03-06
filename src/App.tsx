@@ -1,5 +1,6 @@
+
 import React, { useEffect } from "react";
-import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate, Router } from "react-router-dom";
 
 // Components
 import AuthCallbackHandler from "./components/Auth/AuthCallbackHandler";
@@ -29,7 +30,7 @@ const App: React.FC = () => {
         <Routes>
             {/* No Auth */}
             <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
-            <Route path="/order" element={<MainLayout><TradingPage /></MainLayout>} />
+            <Route path="/order:companyCode" element={<MainLayout><TradingPage /></MainLayout>} />
             <Route path="/personal" element={<MainLayout><PersonalPage /></MainLayout>} />
             {/* Auth */}
             <Route path="/auth" element={<AuthLayout><RedirectIfAuth><AuthPage /></RedirectIfAuth></AuthLayout>} />
@@ -44,7 +45,7 @@ const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-`;
+
 
 
 
