@@ -1,218 +1,258 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
+// StockRanking.tsx
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Tabs,
+  Tab,
+  Box,
+  Pagination,
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
+import axiosInstance from '../api/AxiosInstance';
+
+interface RankingData {
+  companyCode: string;
+  companyName: string;
+  rank: number;
+  totalVolume?: number;
+  listedShares?: number;
+  turnoverRate?: number;
+}
 
 interface StockRankingProps {
   category: string;
   onCategoryChange: (category: string) => void;
 }
 
+const CACHE_DURATION = 10 * 60 * 1000; // 10분
+const UPDATE_INTERVAL = 10 * 60 * 1000; // 10분
+
 const StockRanking: React.FC<StockRankingProps> = ({
   category,
   onCategoryChange,
 }) => {
-  const dummyData = {
-    volume: [
-      { hts_kor_isnm: '삼성전자', stck_prpr: '70,000', prdy_ctrt: '2.5' },
-      { hts_kor_isnm: 'SK하이닉스', stck_prpr: '120,000', prdy_ctrt: '1.8' },
-      { hts_kor_isnm: '현대차', stck_prpr: '180,000', prdy_ctrt: '-0.5' },
-      { hts_kor_isnm: 'NAVER', stck_prpr: '280,000', prdy_ctrt: '3.2' },
-      { hts_kor_isnm: '카카오', stck_prpr: '90,000', prdy_ctrt: '-1.2' },
-    ],
-    change: [
-      { hts_kor_isnm: 'LG화학', stck_prpr: '650,000', prdy_ctrt: '5.2' },
-      { hts_kor_isnm: '셀트리온', stck_prpr: '180,000', prdy_ctrt: '4.8' },
-      {
-        hts_kor_isnm: '삼성바이오로직스',
-        stck_prpr: '750,000',
-        prdy_ctrt: '4.5',
-      },
-      { hts_kor_isnm: '현대모비스', stck_prpr: '220,000', prdy_ctrt: '-3.2' },
-      { hts_kor_isnm: 'KB금융', stck_prpr: '55,000', prdy_ctrt: '-2.8' },
-    ],
-    marketCap: [
-      { hts_kor_isnm: '삼성전자', stck_prpr: '70,000', prdy_ctrt: '0.8' },
-      { hts_kor_isnm: 'SK하이닉스', stck_prpr: '120,000', prdy_ctrt: '1.2' },
-      { hts_kor_isnm: 'NAVER', stck_prpr: '280,000', prdy_ctrt: '2.1' },
-      { hts_kor_isnm: '카카오', stck_prpr: '90,000', prdy_ctrt: '1.5' },
-      {
-        hts_kor_isnm: '삼성바이오로직스',
-        stck_prpr: '750,000',
-        prdy_ctrt: '0.5',
-      },
-    ],
-    marketValue: [
-      { hts_kor_isnm: 'LG화학', stck_prpr: '650,000', prdy_ctrt: '1.8' },
-      { hts_kor_isnm: '현대차', stck_prpr: '180,000', prdy_ctrt: '0.9' },
-      { hts_kor_isnm: '셀트리온', stck_prpr: '180,000', prdy_ctrt: '2.2' },
-      { hts_kor_isnm: '현대모비스', stck_prpr: '220,000', prdy_ctrt: '1.1' },
-      { hts_kor_isnm: 'KB금융', stck_prpr: '55,000', prdy_ctrt: '0.7' },
-    ],
-    largeOrders: [
-      { hts_kor_isnm: 'SK하이닉스', stck_prpr: '120,000', prdy_ctrt: '2.5' },
-      { hts_kor_isnm: '삼성전자', stck_prpr: '70,000', prdy_ctrt: '1.2' },
-      { hts_kor_isnm: 'POSCO', stck_prpr: '280,000', prdy_ctrt: '3.8' },
-      { hts_kor_isnm: '기아', stck_prpr: '75,000', prdy_ctrt: '-1.5' },
-      { hts_kor_isnm: 'LG전자', stck_prpr: '110,000', prdy_ctrt: '2.1' },
-    ],
-  };
+  const [rankingData, setRankingData] = useState<RankingData[]>([]);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 20; // 토스증권은 한 페이지에 더 많은 항목 표시
 
-  const [rankingData, setRankingData] = useState(
-    dummyData[category as keyof typeof dummyData]
-  );
+  const fetchRankingData = useCallback(async () => {
+    const cachedData = localStorage.getItem(`rankingData_${category}`);
+    if (cachedData) {
+      const { data, timestamp } = JSON.parse(cachedData);
+      if (Date.now() - timestamp < CACHE_DURATION) {
+        setRankingData(data);
+        return;
+      }
+    }
 
-  const handleCategoryChange = (newCategory: string) => {
+    try {
+      const response = await axiosInstance.get(`/api/rankings/${category}`);
+      setRankingData(response.data);
+      localStorage.setItem(
+        `rankingData_${category}`,
+        JSON.stringify({
+          data: response.data,
+          timestamp: Date.now(),
+        })
+      );
+    } catch (error) {
+      console.error('랭킹 데이터를 불러오는 데 실패했습니다:', error);
+    }
+  }, [category]);
+
+  useEffect(() => {
+    fetchRankingData();
+    const intervalId = setInterval(fetchRankingData, UPDATE_INTERVAL);
+    return () => clearInterval(intervalId);
+  }, [fetchRankingData]);
+
+  const handleCategoryChange = (
+    event: React.SyntheticEvent,
+    newCategory: string
+  ) => {
     onCategoryChange(newCategory);
-    setRankingData(dummyData[newCategory as keyof typeof dummyData]);
   };
+
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
+    setPage(value);
+  };
+
+  const paginatedData = rankingData.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
 
   return (
     <RankingContainer>
-      <RankingHeader>
-        <Title>실시간 순위</Title>
-        <TabContainer>
-          {['volume', 'change', 'marketCap', 'marketValue', 'largeOrders'].map(
-            (tab) => (
-              <Tab
-                key={tab}
-                $active={category === tab}
-                onClick={() => handleCategoryChange(tab)}
-              >
-                {getCategoryName(tab)}
-              </Tab>
-            )
-          )}
-        </TabContainer>
-      </RankingHeader>
-      <RankingList>
-        <RankingListHeader>
-          <HeaderCell>순위</HeaderCell>
-          <HeaderCell>종목명</HeaderCell>
-          <HeaderCell align="right">현재가</HeaderCell>
-          <HeaderCell align="right">등락률</HeaderCell>
-        </RankingListHeader>
-        {rankingData.map((item, index) => (
-          <RankingItem key={index}>
-            <Rank>{index + 1}</Rank>
-            <StockName>{item.hts_kor_isnm}</StockName>
-            <StockPrice>{item.stck_prpr}원</StockPrice>
-            <PriceChange positive={parseFloat(item.prdy_ctrt) > 0}>
-              {parseFloat(item.prdy_ctrt) > 0 ? '+' : ''}
-              {item.prdy_ctrt}%
-            </PriceChange>
-          </RankingItem>
+      <CategoryTabs
+        value={category}
+        onChange={handleCategoryChange}
+        variant="scrollable"
+        scrollButtons="auto"
+        TabIndicatorProps={{ style: { display: 'none' } }}
+      >
+        {['volume', 'listedshares', 'turnoverrate'].map((tab) => (
+          <CategoryTab
+            key={tab}
+            label={getCategoryName(tab)}
+            value={tab}
+            disableRipple
+          />
         ))}
-      </RankingList>
+      </CategoryTabs>
+
+      <TableContainer component={StyledPaper} elevation={0}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableHeaderCell width="10%">순위</TableHeaderCell>
+              <TableHeaderCell width="50%">종목</TableHeaderCell>
+              <TableHeaderCell width="40%" align="right">
+                {getCategoryName(category)}
+              </TableHeaderCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paginatedData.map((item) => (
+              <StyledTableRow key={item.companyCode} hover>
+                <RankCell>{item.rank}</RankCell>
+                <StockNameCell>{item.companyName}</StockNameCell>
+                <ValueCell>{getCategoryValue(category, item)}</ValueCell>
+              </StyledTableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <PaginationContainer>
+        <StyledPagination
+          count={Math.ceil(rankingData.length / itemsPerPage)}
+          page={page}
+          onChange={handlePageChange}
+          color="primary"
+          size="small"
+          shape="rounded"
+        />
+      </PaginationContainer>
     </RankingContainer>
   );
 };
 
-const RankingContainer = styled.div`
-  width: 100%;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-`;
-
-const RankingHeader = styled.div`
-  padding: 24px 24px 0;
-`;
-
-const Title = styled.h2`
-  font-size: 28px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0 0 24px 0;
-`;
-
-const TabContainer = styled.div`
-  display: flex;
-  border-bottom: 2px solid #f0f0f0;
-  margin-bottom: -2px;
-`;
-
-const Tab = styled.button<{ $active: boolean }>`
-  padding: 12px 20px;
-  background: none;
-  border: none;
-  font-size: 16px;
-  font-weight: ${(props) => (props.$active ? '600' : '500')};
-  color: ${(props) => (props.$active ? '#2196f3' : '#666')};
-  border-bottom: 2px solid
-    ${(props) => (props.$active ? '#2196f3' : 'transparent')};
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    color: #2196f3;
-  }
-`;
-
-const RankingList = styled.div`
-  padding: 0 24px;
-`;
-
-const RankingListHeader = styled.div`
-  display: grid;
-  grid-template-columns: 60px 2fr 1fr 1fr;
-  padding: 16px 0;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 14px;
-  color: #888;
-  font-weight: 600;
-`;
-
-const HeaderCell = styled.span<{ align?: string }>`
-  text-align: ${(props) => props.align || 'left'};
-`;
-
-const RankingItem = styled.div`
-  display: grid;
-  grid-template-columns: 60px 2fr 1fr 1fr;
-  align-items: center;
-  padding: 16px 0;
-  border-bottom: 1px solid #f0f0f0;
-
-  &:last-child {
-    border-bottom: none;
-  }
-`;
-
-const Rank = styled.span`
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a1a1a;
-`;
-
-const StockName = styled.span`
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
-`;
-
-const StockPrice = styled.span`
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a1a;
-  text-align: right;
-`;
-
-const PriceChange = styled.span<{ positive: boolean }>`
-  font-size: 16px;
-  font-weight: 600;
-  color: ${(props) => (props.positive ? '#ff5252' : '#4caf50')};
-  text-align: right;
-`;
-
 const getCategoryName = (category: string): string => {
   const categoryNames: { [key: string]: string } = {
     volume: '거래량',
-    change: '등락률',
-    marketCap: '시가총액',
-    marketValue: '시장가치',
-    largeOrders: '대량체결',
+    listedshares: '상장주식수',
+    turnoverrate: '거래회전율',
   };
   return categoryNames[category] || category;
 };
+
+const getCategoryValue = (category: string, item: RankingData): string => {
+  switch (category) {
+    case 'volume':
+      return item.totalVolume?.toLocaleString() || '';
+    case 'listedshares':
+      return item.listedShares?.toLocaleString() || '';
+    case 'turnoverrate':
+      return item.turnoverRate ? `${item.turnoverRate.toFixed(2)}%` : '';
+    default:
+      return '';
+  }
+};
+
+const RankingContainer = styled(Box)({
+  width: '100%',
+  backgroundColor: '#ffffff',
+  borderRadius: '14px',
+  boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.05)',
+  padding: '16px',
+  overflow: 'hidden',
+});
+
+const CategoryTabs = styled(Tabs)({
+  marginBottom: '16px',
+  borderBottom: '1px solid #f2f4f6',
+  minHeight: '44px',
+});
+
+const CategoryTab = styled(Tab)({
+  textTransform: 'none',
+  fontSize: '15px',
+  fontWeight: 500,
+  color: '#8b95a1',
+  padding: '12px 16px',
+  minHeight: '44px',
+  '&.Mui-selected': {
+    color: '#3182f6',
+    fontWeight: 700,
+  },
+});
+
+const StyledPaper = styled(Paper)({
+  boxShadow: 'none',
+  borderRadius: 0,
+});
+
+const TableHeaderCell = styled(TableCell)({
+  color: '#8b95a1',
+  fontSize: '13px',
+  fontWeight: 500,
+  padding: '12px 16px',
+  borderBottom: '1px solid #f2f4f6',
+});
+
+const StyledTableRow = styled(TableRow)({
+  '&:hover': {
+    backgroundColor: '#f9fafb',
+  },
+  '& td': {
+    borderBottom: '1px solid #f2f4f6',
+    padding: '14px 16px',
+  },
+});
+
+const RankCell = styled(TableCell)({
+  fontSize: '14px',
+  color: '#8b95a1',
+  fontWeight: 500,
+});
+
+const StockNameCell = styled(TableCell)({
+  fontSize: '15px',
+  color: '#191f28',
+  fontWeight: 500,
+});
+
+const ValueCell = styled(TableCell)({
+  fontSize: '15px',
+  color: '#191f28',
+  fontWeight: 600,
+  textAlign: 'right',
+});
+
+const PaginationContainer = styled(Box)({
+  display: 'flex',
+  justifyContent: 'center',
+  marginTop: '16px',
+});
+
+const StyledPagination = styled(Pagination)({
+  '& .MuiPaginationItem-root': {
+    color: '#8b95a1',
+  },
+  '& .Mui-selected': {
+    backgroundColor: '#f2f4f6',
+    color: '#191f28',
+  },
+});
 
 export default StockRanking;
