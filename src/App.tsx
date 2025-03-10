@@ -1,22 +1,26 @@
-
-import React, { useEffect } from "react";
-import { Routes, Route, useLocation, useNavigate, Router } from "react-router-dom";
+import React, { useEffect } from 'react';
+import {
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+  Router,
+} from 'react-router-dom';
 
 // Components
-import AuthCallbackHandler from "./components/Auth/AuthCallbackHandler";
-import RedirectIfAuth from "./components/Auth/RedirectIfAuth";
-import styled from "styled-components";
+import AuthCallbackHandler from './components/Auth/AuthCallbackHandler';
+import RedirectIfAuth from './components/Auth/RedirectIfAuth';
+import styled from 'styled-components';
 
 // Pages
-import AuthPage from "./pages/Auth/AuthPage";
-import HomePage from "./pages/Base/HomePage";
-import TradingPage from "./pages/Base/TradingPage";
+import AuthPage from './pages/Auth/AuthPage';
+import HomePage from './pages/HomePage';
+import TradingPage from './pages/Base/TradingPage';
 
 // Layouts
-import MainLayout from "./layouts/MainLayout";
-import AuthLayout from "./layouts/AuthLayout";
-import PersonalPage from "./pages/Base/PersonalPage";
-
+import MainLayout from './layouts/MainLayout';
+import AuthLayout from './layouts/AuthLayout';
+import PersonalPage from './pages/Base/PersonalPage';
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -27,15 +31,45 @@ const App: React.FC = () => {
 
   return (
     <AppContainer>
-        <Routes>
-            {/* No Auth */}
-            <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
-            <Route path="/order:companyCode" element={<MainLayout><TradingPage /></MainLayout>} />
-            <Route path="/personal" element={<MainLayout><PersonalPage /></MainLayout>} />
-            {/* Auth */}
-            <Route path="/auth" element={<AuthLayout><RedirectIfAuth><AuthPage /></RedirectIfAuth></AuthLayout>} />
-            <Route path="/auth/callback" element={<AuthCallbackHandler />} />
-          </Routes>
+      <Routes>
+        {/* No Auth */}
+        <Route
+          path="/"
+          element={
+            <MainLayout>
+              <HomePage />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/order:companyCode"
+          element={
+            <MainLayout>
+              <TradingPage />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/personal"
+          element={
+            <MainLayout>
+              <PersonalPage />
+            </MainLayout>
+          }
+        />
+        {/* Auth */}
+        <Route
+          path="/auth"
+          element={
+            <AuthLayout>
+              <RedirectIfAuth>
+                <AuthPage />
+              </RedirectIfAuth>
+            </AuthLayout>
+          }
+        />
+        <Route path="/auth/callback" element={<AuthCallbackHandler />} />
+      </Routes>
     </AppContainer>
   );
 };
@@ -44,9 +78,8 @@ const AppContainer = styled.div`
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-
-
-
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+`;
 
 export default App;

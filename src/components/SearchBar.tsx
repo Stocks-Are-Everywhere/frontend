@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/AxiosInstance';
+import { Search as SearchIcon } from '@mui/icons-material';
 
 interface CompanySearchResponse {
   isuNm: string; // 종목명
   isuSrtCd: string; // 단축코드
-  mktTpNm: string; // 시장구분
-  secugrpNm: string; // 증권구분
   isuAbbrv: string; // 종목 약어
+  isuEngNm: string; // 영문 종목명
+  kindStkcertTpNm: string; // 주식종류
 }
 
 const SearchBar: React.FC = () => {
@@ -39,6 +40,7 @@ const SearchBar: React.FC = () => {
           const response = await axiosInstance.get<CompanySearchResponse[]>(
             `/api/companies/search?query=${searchTerm}`
           );
+          console.log(response.data);
 
           setResults(response.data);
           setIsOpen(true);
@@ -64,13 +66,18 @@ const SearchBar: React.FC = () => {
 
   return (
     <SearchContainer ref={searchRef}>
-      <SearchInput
-        type="text"
-        placeholder="종목명을 검색하세요"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        onFocus={() => setIsOpen(true)}
-      />
+      <SearchInputWrapper>
+        <SearchIconWrapper>
+          <SearchIcon style={{ color: '#8b95a1', fontSize: 20 }} />
+        </SearchIconWrapper>
+        <SearchInput
+          type="text"
+          placeholder="종목명을 검색하세요"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onFocus={() => setIsOpen(true)}
+        />
+      </SearchInputWrapper>
       {isOpen && results.length > 0 && (
         <ResultsDropdown>
           {results.map((result) => (
@@ -79,15 +86,20 @@ const SearchBar: React.FC = () => {
               onClick={() => handleResultClick(result)}
             >
               <StockInfo>
-                <StockName>{result.isuAbbrv}</StockName>
-                <StockCode>{result.isuSrtCd}</StockCode>
-                <MarketType>{result.mktTpNm}</MarketType>
+                <StockNameRow>
+                  <StockName>{result.isuNm}</StockName>
+                  <StockEngName>{result.isuEngNm}</StockEngName>
+                </StockNameRow>
+                <StockMeta>
+                  <StockCode>{result.isuSrtCd}</StockCode>
+                  <MarketType>{result.kindStkcertTpNm}</MarketType>
+                </StockMeta>
               </StockInfo>
             </ResultItem>
           ))}
         </ResultsDropdown>
       )}
-      {isOpen && results.length === 0 && (
+      {isOpen && searchTerm && results.length === 0 && (
         <NoResults>검색 결과가 없습니다.</NoResults>
       )}
     </SearchContainer>
@@ -101,26 +113,40 @@ const SearchContainer = styled.div`
   margin: 0 auto;
 `;
 
+const SearchInputWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background-color: #f2f4f6;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+
+  &:focus-within {
+    background-color: #ffffff;
+    box-shadow: 0px 0px 0px 2px #3182f6;
+  }
+`;
+
+const SearchIconWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 12px;
+`;
+
 const SearchInput = styled.input`
   width: 100%;
-  padding: 12px 16px;
-  font-size: 16px;
-  border: 1px solid #ddd;
-  border-radius: 24px;
+  padding: 12px 16px 12px 8px;
+  font-size: 15px;
+  border: none;
+  background: transparent;
   outline: none;
-  transition: all 0.3s ease;
+  color: #191f28;
 
   &::placeholder {
-    color: #aaa;
-    font-size: 14px;
-    font-style: italic; /* Placeholders에 약간의 스타일 추가 */
-  }
-
-  &:focus {
-    border-color: #3182f6;
-    box-shadow: 0px 4px 8px rgba(49, 130, 246, 0.2);
-    background-color: #f9f9f9;
-    transition: all 0.3s ease-in-out; /* 부드러운 전환 효과 */
+    color: #8b95a1;
+    font-size: 15px;
   }
 `;
 
@@ -130,54 +156,73 @@ const ResultsDropdown = styled.div`
   left: 0;
   right: 0;
   background-color: white;
-  border-radius: 12px;
-  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px;
-
-  max-height: 300px; /* 드롭다운 최대 높이 설정 */
-  overflow-y: auto; /* 스크롤 활성화 */
+  border-radius: 14px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 100;
 `;
 
 const ResultItem = styled.div`
   display: flex;
-  align-items: center; /* 아이템 내 텍스트 수직 정렬 */
-  padding: 12px 16px;
+  align-items: flex-start;
+  padding: 14px 16px;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: background-color 0.15s ease;
 
   &:hover {
-    background-color: #f5f5f5;
-    color: #3182f6;
-    font-weight: bold;
-    transition: all 0.2s ease-in-out;
+    background-color: #f9fafb;
   }
 `;
 
 const StockInfo = styled.div`
   display: flex;
   flex-direction: column;
+  gap: 4px;
+  flex: 1;
+`;
+
+const StockNameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
 `;
 
 const StockName = styled.div`
-  font-size: 16px;
-  font-weight: 600; /* 종목명 강조 */
-  color: #333;
+  font-size: 15px;
+  font-weight: 500;
+  color: #191f28;
+`;
+
+const StockEngName = styled.div`
+  font-size: 14px;
+  color: #8b95a1;
+`;
+
+const StockMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
 `;
 
 const StockCode = styled.div`
-  font-size: 14px;
-  color: #888; /* 단축코드 색상 약간 흐리게 */
+  font-size: 13px;
+  color: #8b95a1;
 `;
 
 const MarketType = styled.div`
-  font-size: 14px;
-  color: #666; /* 시장구분 색상 약간 흐리게 */
+  font-size: 12px;
+  color: #8b95a1;
+  background-color: #f2f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
 `;
 
 const NoResults = styled.div`
   padding: 16px;
   text-align: center;
   font-size: 14px;
-  color: #888; /* 검색 결과 없음 메시지 색상 */
+  color: #8b95a1;
 `;
 
 export default SearchBar;
