@@ -2,8 +2,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import WebSocketService from '../services/WebSocketService';
 import { OrderBookData, PriceLevel } from '../types/orderbook';
+import { CompanySearchResponse } from '../types/CompanySearchResponse';
 
-const OrderBook: React.FC = () => {
+interface OrderBookProps {
+  companyData: CompanySearchResponse;
+}
+
+const OrderBook: React.FC<OrderBookProps> = ({ companyData }) => {
   const [orderBook, setOrderBook] = useState<OrderBookData | null>(null);
   const prevOrderBook = useRef<OrderBookData | null>(null);
   const prevPrice = useRef<number | null>(null);
@@ -69,26 +74,34 @@ const OrderBook: React.FC = () => {
 
   useEffect(() => {
     orderBookWS.connect();
-    orderBookWS.subscribe('/topic/orderbook/005930', (data: OrderBookData) => {
-      const currentPrice = calculateCurrentPrice(data);
-      const prevPrice = prevOrderBook.current
-        ? calculateCurrentPrice(prevOrderBook.current)
-        : currentPrice;
 
-      const enrichedData = {
-        ...data,
-        currentPrice: currentPrice ?? 0,
-        prevPrice: prevPrice ?? 0,
-      };
+    // 회사 코드를 props에서 가져옴
+    const companyCode = companyData.isuSrtCd;
 
-      prevOrderBook.current = orderBook;
-      setOrderBook(enrichedData);
-    });
+    orderBookWS.subscribe(
+      `/topic/orderbook/${companyCode}`,
+      (data: OrderBookData) => {
+        const currentPrice = calculateCurrentPrice(data);
+        const prevPrice = prevOrderBook.current
+          ? calculateCurrentPrice(prevOrderBook.current)
+          : currentPrice;
+
+        const enrichedData = {
+          ...data,
+          companyCode: companyCode, // 회사 코드 설정
+          currentPrice: currentPrice ?? 0,
+          prevPrice: prevPrice ?? 0,
+        };
+
+        prevOrderBook.current = orderBook;
+        setOrderBook(enrichedData);
+      }
+    );
 
     return () => {
       orderBookWS.disconnect();
     };
-  }, []);
+  }, [companyData.isuSrtCd]);
 
   if (!orderBook) {
     return <Container>Loading...</Container>;
@@ -98,8 +111,8 @@ const OrderBook: React.FC = () => {
     <Container>
       <Header>
         <CompanyInfo>
-          <CompanyCode>{orderBook.companyCode}</CompanyCode>
-          <CompanyName>삼성전자</CompanyName>
+          <CompanyCode>{companyData.isuSrtCd}</CompanyCode>
+          <CompanyName>{companyData.isuNm}</CompanyName>
         </CompanyInfo>
       </Header>
 
