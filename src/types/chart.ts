@@ -1,7 +1,17 @@
-import { Time } from 'lightweight-charts';
+import { UTCTimestamp } from 'lightweight-charts';
+
+// 인터페이스 정의 - Time 대신 UTCTimestamp 사용
+export interface CandleDto {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
 
 export interface ChartData {
-  time: Time; // Time 타입 사용
+  time: UTCTimestamp; // UTCTimestamp 사용
   open: number;
   high: number;
   low: number;
@@ -11,9 +21,12 @@ export interface ChartData {
 
 export interface ChartUpdateData {
   price: number;
-  volume: number;
+  volume?: number;
+  time?: number;
+  timeCode?: string;
 }
 
 export interface ChartResponseDto {
-  candles: ChartData[];
+  candles: CandleDto[];
+  timeCode?: string;
 }
