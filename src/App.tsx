@@ -1,11 +1,5 @@
 import React, { useEffect } from 'react';
-import {
-  Routes,
-  Route,
-  useLocation,
-  useNavigate,
-  Router,
-} from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 
 // Components
 import AuthCallbackHandler from './components/Auth/AuthCallbackHandler';
@@ -42,7 +36,7 @@ const App: React.FC = () => {
           }
         />
         <Route
-          path="/order:companyCode"
+          path="/order/:companyCode"
           element={
             <MainLayout>
               <TradingPage />

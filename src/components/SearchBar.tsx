@@ -1,21 +1,16 @@
+// SearchBar.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/AxiosInstance';
 import { Search as SearchIcon } from '@mui/icons-material';
-
-interface CompanySearchResponse {
-  isuNm: string; // 종목명
-  isuSrtCd: string; // 단축코드
-  isuAbbrv: string; // 종목 약어
-  isuEngNm: string; // 영문 종목명
-  kindStkcertTpNm: string; // 주식종류
-}
+import { CompanySearchResponse } from '../types/CompanySearchResponse';
 
 const SearchBar: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<CompanySearchResponse[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -36,17 +31,20 @@ const SearchBar: React.FC = () => {
   useEffect(() => {
     const fetchResults = async () => {
       if (searchTerm.length >= 1) {
+        setIsLoading(true);
         try {
           const response = await axiosInstance.get<CompanySearchResponse[]>(
             `/api/companies/search?query=${searchTerm}`
           );
-          console.log(response.data);
+          console.log('검색 결과:', response.data);
 
           setResults(response.data);
           setIsOpen(true);
         } catch (error) {
           console.error('Error fetching search results:', error);
           setResults([]);
+        } finally {
+          setIsLoading(false);
         }
       } else {
         setResults([]);
@@ -59,9 +57,27 @@ const SearchBar: React.FC = () => {
   }, [searchTerm]);
 
   const handleResultClick = (company: CompanySearchResponse) => {
-    navigate(`/trading/${company.isuSrtCd}`);
+    // 회사 정보를 state로 전달하면서 페이지 이동
+    console.log('선택된 회사 정보:', company);
+
+    // 주문 페이지로 이동하면서 회사 정보 전달
+    navigate(`/order/${company.isuSrtCd}`, {
+      state: { selectedCompany: company },
+    });
+
+    // 홈 페이지로 이동하면서 회사 정보 전달하려면 아래 코드 사용
+    // navigate('/', {
+    //   state: { selectedCompany: company }
+    // });
+
     setIsOpen(false);
     setSearchTerm('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && results.length > 0) {
+      handleResultClick(results[0]); // 첫 번째 검색 결과 선택
+    }
   };
 
   return (
@@ -75,32 +91,44 @@ const SearchBar: React.FC = () => {
           placeholder="종목명을 검색하세요"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => searchTerm.length > 0 && setIsOpen(true)}
+          onKeyDown={handleKeyDown}
         />
+        {searchTerm && (
+          <ClearButton onClick={() => setSearchTerm('')}>✕</ClearButton>
+        )}
       </SearchInputWrapper>
-      {isOpen && results.length > 0 && (
+
+      {isOpen && (
         <ResultsDropdown>
-          {results.map((result) => (
-            <ResultItem
-              key={result.isuSrtCd}
-              onClick={() => handleResultClick(result)}
-            >
-              <StockInfo>
-                <StockNameRow>
-                  <StockName>{result.isuNm}</StockName>
-                  <StockEngName>{result.isuEngNm}</StockEngName>
-                </StockNameRow>
-                <StockMeta>
-                  <StockCode>{result.isuSrtCd}</StockCode>
-                  <MarketType>{result.kindStkcertTpNm}</MarketType>
-                </StockMeta>
-              </StockInfo>
-            </ResultItem>
-          ))}
+          {isLoading ? (
+            <LoadingMessage>검색 중...</LoadingMessage>
+          ) : results.length > 0 ? (
+            results.map((result) => (
+              <ResultItem
+                key={result.isuSrtCd}
+                onClick={() => handleResultClick(result)}
+              >
+                <StockInfo>
+                  <StockNameRow>
+                    <StockName>{result.isuNm}</StockName>
+                    {result.isuEngNm && (
+                      <StockEngName>{result.isuEngNm}</StockEngName>
+                    )}
+                  </StockNameRow>
+                  <StockMeta>
+                    <StockCode>{result.isuSrtCd}</StockCode>
+                    {result.kindStkcertTpNm && (
+                      <MarketType>{result.kindStkcertTpNm}</MarketType>
+                    )}
+                  </StockMeta>
+                </StockInfo>
+              </ResultItem>
+            ))
+          ) : searchTerm ? (
+            <NoResults>검색 결과가 없습니다.</NoResults>
+          ) : null}
         </ResultsDropdown>
-      )}
-      {isOpen && searchTerm && results.length === 0 && (
-        <NoResults>검색 결과가 없습니다.</NoResults>
       )}
     </SearchContainer>
   );
@@ -147,6 +175,23 @@ const SearchInput = styled.input`
   &::placeholder {
     color: #8b95a1;
     font-size: 15px;
+  }
+`;
+
+const ClearButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #8b95a1;
+  font-size: 14px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+
+  &:hover {
+    color: #191f28;
   }
 `;
 
@@ -219,6 +264,13 @@ const MarketType = styled.div`
 `;
 
 const NoResults = styled.div`
+  padding: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: #8b95a1;
+`;
+
+const LoadingMessage = styled.div`
   padding: 16px;
   text-align: center;
   font-size: 14px;

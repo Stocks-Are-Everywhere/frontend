@@ -3,8 +3,13 @@ import styled from 'styled-components';
 import { TradeHistory } from '../types/tradehistory';
 import axiosInstance from '../api/AxiosInstance';
 import eventbus from '../util/eventbus';
+import { CompanySearchResponse } from '../types/CompanySearchResponse';
 
-const TradeHistoryList: React.FC = () => {
+interface OrderBookProps {
+  companyData: CompanySearchResponse;
+}
+
+const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
   const [trades, setTrades] = useState<TradeHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

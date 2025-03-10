@@ -3,11 +3,16 @@ import styled from 'styled-components';
 import { submitOrder } from '../services/orderService';
 import { OrderRequest } from '../types/customerorderbook';
 import eventBus from '../util/eventbus';
+import { CompanySearchResponse } from '../types/CompanySearchResponse';
 
 export type OrderSide = 'BUY' | 'SELL';
 export type PriceType = 'limit' | 'market';
 
-const CustomOrderBook: React.FC = () => {
+interface OrderBookProps {
+  companyData: CompanySearchResponse;
+}
+
+const CustomOrderBook: React.FC<OrderBookProps> = ({ companyData }) => {
   const [side, setSide] = useState<OrderSide>('BUY');
   const [priceType, setPriceType] = useState<PriceType>('limit');
   const [price, setPrice] = useState<string>('');
@@ -51,7 +56,7 @@ const CustomOrderBook: React.FC = () => {
     }
 
     const orderRequest: OrderRequest = {
-      companyCode: '005930',
+      companyCode: companyData.isuSrtCd,
       type: side,
       quantity: parseInt(quantity),
       price: priceType === 'limit' ? parseInt(price) : 0,

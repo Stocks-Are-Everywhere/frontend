@@ -8,9 +8,17 @@ import {
 import styled from 'styled-components';
 import axiosInstance from '../api/AxiosInstance';
 import { useStockWebSocket } from '../services/chartWebSocketService';
-import {CandleDto, ChartData, ChartUpdateData, ChartResponseDto} from '../types/chart';
+import {
+  CandleDto,
+  ChartData,
+  ChartUpdateData,
+  ChartResponseDto,
+} from '../types/chart';
+import { CompanySearchResponse } from '../types/CompanySearchResponse';
 
-const CHART_SYMBOL = '005930'; // 삼성전자
+interface OrderBookProps {
+  companyData: CompanySearchResponse;
+}
 
 // 타임프레임 정의
 const TIME_FRAMES = [
@@ -123,7 +131,8 @@ const createSafeChartData = (rawCandles: any[]): ChartData[] => {
   return result;
 };
 
-const RealTimeChart: React.FC = () => {
+const RealTimeChart: React.FC<OrderBookProps> = ({ companyData }) => {
+  const CHART_SYMBOL = companyData.isuSrtCd;
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -475,7 +484,7 @@ const RealTimeChart: React.FC = () => {
         debugLog('캔들 업데이트 중 오류 발생', err);
       }
     },
-    [selectedTimeFrame]
+    [selectedTimeFrame, companyData.isuSrtCd]
   );
 
   // 캔들 업데이트 핸들러
@@ -638,7 +647,9 @@ const RealTimeChart: React.FC = () => {
     <ChartContainer>
       <ChartHeader>
         <SymbolInfo>
-          <SymbolName>삼성전자 (005930)</SymbolName>
+          <SymbolName>
+            {companyData.isuNm} ({companyData.isuSrtCd})
+          </SymbolName>
           <Exchange>KOSPI</Exchange>
         </SymbolInfo>
         <TimeFrameSelector>
