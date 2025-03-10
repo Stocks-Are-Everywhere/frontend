@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import ProfileMenu from './ProfileMenu';
 import { useNavigate } from 'react-router-dom';
 import { getBalance } from '../services/orderService';
+import SearchBar from './SearchBar';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -13,10 +14,7 @@ const Header: React.FC = () => {
   const [balance, setBalance] = useState<number>(1000000);
 
   useEffect(() => {
-    // 컴포넌트 마운트 시 초기 잔액 설정
     setBalance(getBalance());
-
-    // 1초마다 잔액 업데이트 (실시간 반영)
     const intervalId = setInterval(() => {
       setBalance(getBalance());
     }, 1000);
@@ -30,6 +28,10 @@ const Header: React.FC = () => {
         <LogoSection>
           <Logo onClick={handleHome}>온세주</Logo>
         </LogoSection>
+
+        <SearchBarSection>
+          <SearchBar />
+        </SearchBarSection>
 
         <NavSection>
           <NavItem>홈</NavItem>
@@ -53,13 +55,11 @@ const Header: React.FC = () => {
   );
 };
 
-// 스타일 컴포넌트는 그대로 유지
-
 const HeaderContainer = styled.header`
   width: 100%;
-  height: 64px;
+  height: 80px; /* 헤더 높이 설정 */
   background-color: #ffffff;
-  border-bottom: 1px solid #f2f2f2;
+  border-bottom: 1px solid #e0e0e0;
   position: fixed;
   top: 0;
   z-index: 100;
@@ -68,29 +68,22 @@ const HeaderContainer = styled.header`
 const HeaderContent = styled.div`
   max-width: 1200px;
   height: 100%;
-  margin: 0 auto;
+  margin: auto;
   padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 `;
 
-const LogoSection = styled.div`
-  flex: 0 0 auto;
-`;
+const LogoSection = styled.div``;
 
 const Logo = styled.h1`
   font-size: 24px;
-  font-weight: 700;
-  color: #333d4b;
-  margin: 0;
+  font-weight: bold;
 `;
 
 const NavSection = styled.nav`
-  flex: 1;
   display: flex;
-  justify-content: center;
-  gap: 32px;
 `;
 
 const NavItem = styled.a<{ active?: boolean }>`
@@ -98,12 +91,12 @@ const NavItem = styled.a<{ active?: boolean }>`
   font-weight: ${(props) => (props.active ? '700' : '500')};
   color: ${(props) => (props.active ? '#333d4b' : '#8b95a1')};
   text-decoration: none;
-  padding: 8px 0;
-  cursor: pointer;
-  transition: color 0.2s ease;
+  padding: 8px;
 
   &:hover {
-    color: #333d4b;
+    color: #333d4b; /* Hover 효과 추가 */
+    border-bottom: 2px solid #3182f6; /* Hover 시 밑줄 효과 */
+    transition: color 0.3s ease, border-bottom 0.3s ease; /* 부드러운 효과 */
   }
 `;
 
@@ -127,6 +120,28 @@ const BalanceAmount = styled.div`
   font-size: 16px;
   font-weight: 700;
   color: #333d4b;
+`;
+
+
+const UserProfile = styled.div`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #f2f2f2;
+`;
+
+const ProfileImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const SearchBarSection = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 export default Header;
