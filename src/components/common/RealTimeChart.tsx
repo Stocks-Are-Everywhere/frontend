@@ -6,15 +6,15 @@ import {
   UTCTimestamp,
 } from 'lightweight-charts';
 import styled from 'styled-components';
-import axiosInstance from '../api/AxiosInstance';
-import { useStockWebSocket } from '../services/chartWebSocketService';
+import axiosInstance from '../../api/AxiosInstance';
+import { useStockWebSocket } from '../../services/chartWebSocketService';
 import {
   CandleDto,
   ChartData,
   ChartUpdateData,
   ChartResponseDto,
-} from '../types/chart';
-import { CompanySearchResponse } from '../types/CompanySearchResponse';
+} from '../../types/chart';
+import { CompanySearchResponse } from '../../types/CompanySearchResponse';
 
 interface OrderBookProps {
   companyData: CompanySearchResponse;

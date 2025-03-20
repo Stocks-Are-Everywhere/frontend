@@ -2,9 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../api/AxiosInstance';
+import axiosInstance from '../../api/AxiosInstance';
 import { Search as SearchIcon } from '@mui/icons-material';
-import { CompanySearchResponse } from '../types/CompanySearchResponse';
+import { CompanySearchResponse } from '../../types/CompanySearchResponse';
 
 const SearchBar: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -90,7 +90,7 @@ const SearchBar: React.FC = () => {
           type="text"
           placeholder="종목명을 검색하세요"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e: any) => setSearchTerm(e.target.value)}
           onFocus={() => searchTerm.length > 0 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
         />

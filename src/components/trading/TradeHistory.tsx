@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { TradeHistory } from '../types/tradehistory';
-import axiosInstance from '../api/AxiosInstance';
-import eventbus from '../util/eventbus';
-import { CompanySearchResponse } from '../types/CompanySearchResponse';
+import { TradeHistory } from '../../types/tradehistory';
+import axiosInstance from '../../api/AxiosInstance';
+import eventbus from '../../util/eventbus';
+import { CompanySearchResponse } from '../../types/CompanySearchResponse';
 
 interface OrderBookProps {
   companyData: CompanySearchResponse;
@@ -16,7 +16,7 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
 
   useEffect(() => {
     // 이벤트 구독
-    const unsubscribe = eventbus.subscribe('newTrade', (newTrade) => {
+    const unsubscribe = eventbus.subscribe('newTrade', (newTrade: any) => {
       setTrades((prevTrades) => [newTrade, ...prevTrades]);
     });
 

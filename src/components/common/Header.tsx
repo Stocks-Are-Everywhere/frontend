@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import ProfileMenu from './ProfileMenu';
 import { useNavigate } from 'react-router-dom';
-import { getBalance } from '../services/orderService';
+import { getBalance } from '../../services/orderService';
 import SearchBar from './SearchBar';
 
 const Header: React.FC = () => {

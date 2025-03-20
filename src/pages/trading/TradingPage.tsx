@@ -1,10 +1,10 @@
 // TradingPage.tsx (styled 부분 제외)
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
-import OrderBook from '../../components/OrderBook';
-import TradeHistoryList from '../../components/TradeHistory';
-import CustomOrderBook from '../../components/CustomOrderBook';
-import RealTimeChart from '../../components/RealTimeChart';
+import OrderBook from '../../components/trading/OrderBook';
+import RealTimeChart from '../../components/common/RealTimeChart';
+import CustomOrderBook from '../../components/trading/CustomOrderBook';
+import TradeHistoryList from '../../components/trading/TradeHistory';
 import axiosInstance from '../../api/AxiosInstance';
 import { CompanySearchResponse } from '../../types/CompanySearchResponse';
 import styled from 'styled-components';

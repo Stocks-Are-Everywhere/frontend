@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
-import WebSocketService from '../services/WebSocketService';
-import { OrderBookData, PriceLevel } from '../types/orderbook';
-import { CompanySearchResponse } from '../types/CompanySearchResponse';
+import WebSocketService from '../../services/WebSocketService';
+import { OrderBookData, PriceLevel } from '../../types/orderbook';
+import { CompanySearchResponse } from '../../types/CompanySearchResponse';
 
 interface OrderBookProps {
   companyData: CompanySearchResponse;
@@ -118,7 +118,7 @@ const OrderBook: React.FC<OrderBookProps> = ({ companyData }) => {
 
       <OrderBookWrapper>
         <AskLevels>
-          {orderBook.sellLevels.map((level, index) => {
+          {orderBook.sellLevels.map((level: any, index: any) => {
             const prevLevel = prevOrderBook.current?.sellLevels[index];
             const priceChange = getPriceChange(level, prevLevel);
             const quantityChange = getQuantityChange(level, prevLevel);
@@ -197,7 +197,7 @@ const OrderBook: React.FC<OrderBookProps> = ({ companyData }) => {
         <Divider />
 
         <BidLevels>
-          {orderBook.buyLevels.map((level, index) => {
+          {orderBook.buyLevels.map((level: any, index: any) => {
             const prevLevel = prevOrderBook.current?.buyLevels[index];
             const priceChange = getPriceChange(level, prevLevel);
             const quantityChange = getQuantityChange(level, prevLevel);

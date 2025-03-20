@@ -2,19 +2,20 @@ import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 
 // Components
-import AuthCallbackHandler from './components/Auth/AuthCallbackHandler';
-import RedirectIfAuth from './components/Auth/RedirectIfAuth';
+
+import AuthCallbackHandler from './components/auth/AuthCallbackHandler';
+import RedirectIfAuth from './components/auth/RedirectIfAuth';
 import styled from 'styled-components';
 
 // Pages
-import AuthPage from './pages/Auth/AuthPage';
-import HomePage from './pages/HomePage';
-import TradingPage from './pages/Base/TradingPage';
+import AuthPage from './pages/auth/AuthPage';
+import HomePage from './pages/base/HomePage';
+import TradingPage from './pages/trading/TradingPage';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
 import AuthLayout from './layouts/AuthLayout';
-import PersonalPage from './pages/Base/PersonalPage';
+import PersonalPage from './pages/personal/PersonalPage';
 
 const App: React.FC = () => {
   const location = useLocation();

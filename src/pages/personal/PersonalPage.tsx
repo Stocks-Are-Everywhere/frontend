@@ -1,7 +1,7 @@
 import React from "react";
-import SavedStockList from "../../components/Personal/SavedStockList";
-import AssetList from "../../components/Personal/AssetList";
-import AccountInfo from "../../components/Personal/AccountInfo";
+import AccountInfo from "../../components/personal/AccountInfo";
+import AssetList from "../../components/personal/AssetList";
+import SavedStockList from "../../components/personal/SavedStockList";
 
 import "../../styles/PersonalPage.css";
 

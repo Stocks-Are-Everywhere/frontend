@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { submitOrder } from '../services/orderService';
-import { OrderRequest } from '../types/customerorderbook';
-import eventBus from '../util/eventbus';
-import { CompanySearchResponse } from '../types/CompanySearchResponse';
+import { submitOrder } from '../../services/orderService';
+import { OrderRequest } from '../../types/customerorderbook';
+import eventBus from '../../util/eventbus';
+import { CompanySearchResponse } from '../../types/CompanySearchResponse';
 
 export type OrderSide = 'BUY' | 'SELL';
 export type PriceType = 'limit' | 'market';

@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import GoogleOAuthButton from "../../components/Auth/GoogleOAuthButton";
+import GoogleOAuthButton from "../../components/auth/GoogleOAuthButton";
 
 const AuthPage: React.FC = () => {
   return (

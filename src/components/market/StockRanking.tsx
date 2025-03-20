@@ -14,7 +14,7 @@ import {
   Pagination,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import axiosInstance from '../api/AxiosInstance';
+import axiosInstance from '../../api/AxiosInstance';
 
 interface RankingData {
   companyCode: string;
