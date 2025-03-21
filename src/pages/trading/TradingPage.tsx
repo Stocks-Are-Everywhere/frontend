@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import OrderBook from '../../components/trading/OrderBook';
-import RealTimeChart from '../../components/common/RealTimeChart';
+import RealTimeChart from '../../components/chart/RealTimeChart';
+// import RealTimeChart from '../../components/chart/RealTimeChartBefore';
 import CustomOrderBook from '../../components/trading/CustomOrderBook';
 import TradeHistoryList from '../../components/trading/TradeHistory';
 import axiosInstance from '../../api/AxiosInstance';

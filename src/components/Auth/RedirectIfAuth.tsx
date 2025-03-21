@@ -1,12 +1,13 @@
 import { Navigate } from "react-router-dom";
-import { ReactElement } from "react";
+import { ReactElement, FC } from "react";
+import AuthService from "../../services/AuthService";
 
 interface RedirectIfAuthProps {
     children: ReactElement;
 }
 
-const RedirectIfAuth = ({ children }: RedirectIfAuthProps): ReactElement => {
-    const token = localStorage.getItem("jwt");
+const RedirectIfAuth: FC<RedirectIfAuthProps> = ({ children }) => {
+    const token = AuthService.getToken();
 
     return token ? <Navigate to="/" replace /> : children;
 };

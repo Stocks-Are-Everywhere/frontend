@@ -7,6 +7,10 @@ const AuthService = {
     window.location.href = "http://localhost:8080/api/members/google/login";
   },
 
+  getToken: (): string | null => {
+    return localStorage.getItem("jwt");
+  },
+
   logoutGoogle: () => {
     localStorage.removeItem("jwt");
     window.location.href = "/auth";
@@ -30,11 +34,9 @@ const AuthService = {
 
       if (rawToken) {
         const token = rawToken.replace("Bearer%20", "Bearer ");
-
-        // ✅ Store token in localStorage (for web app)
+        
         localStorage.setItem("jwt", token);
 
-        // ✅ Store token inside Chrome Extension (from a webpage)
         window.postMessage({ action: "saveToken", token }, "*");
       } else {
         console.error("Authorization header is missing");

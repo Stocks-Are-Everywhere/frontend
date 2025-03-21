@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
-import GoogleOAuthButton from "../../components/auth/GoogleOAuthButton";
+import OAuthButton from "../../components/auth/OAuthButton";
+import AuthService from "../../services/AuthService";
 
 const AuthPage: React.FC = () => {
   return (
@@ -8,7 +9,7 @@ const AuthPage: React.FC = () => {
       <LeftSection>
         <AuthBox>
           <WebsiteName>온 세상이 주식이야!</WebsiteName>
-          <GoogleOAuthButton />
+          <OAuthButton provider="google" onClick={AuthService.loginWithGoogle} />
         </AuthBox>
       </LeftSection>
       <RightSection>
@@ -40,7 +41,7 @@ const AuthBox = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color:rgb(248, 250, 249);
+  background-color: rgb(248, 250, 249);
   padding: 30px;
   border-radius: 20px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
@@ -59,7 +60,6 @@ const RightSection = styled.div`
   align-items: center;
   justify-content: center;
 `;
-
 
 const Logo = styled.img`
   width: 300px;

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Menu, MenuItem, Avatar, IconButton } from "@mui/material";
-import AuthService from "../../services/AuthService";
+import AuthService from "../../../services/AuthService";
 import styled from 'styled-components';
 import { useNavigate } from "react-router-dom";
 
