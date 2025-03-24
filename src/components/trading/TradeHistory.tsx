@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import { TradeHistory } from '../../types/tradehistory';
-import axiosInstance from '../../api/AxiosInstance';
-import eventbus from '../../util/eventbus';
-import { CompanySearchResponse } from '../../types/CompanySearchResponse';
+import React, { useState, useEffect } from "react";
+import { TradeHistory } from "../../types/tradehistory";
+import axiosInstance from "../../api/AxiosInstance";
+import eventbus from "../../util/eventbus";
+import { CompanySearchResponse } from "../../types/CompanySearchResponse";
 
 interface OrderBookProps {
   companyData: CompanySearchResponse;
@@ -14,281 +13,147 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // 이벤트 구독
-    const unsubscribe = eventbus.subscribe('newTrade', (newTrade: any) => {
-      setTrades((prevTrades) => [newTrade, ...prevTrades]);
-    });
+  // Dummy data
+  const dummyTrades: TradeHistory[] = [
+    {
+      id: 1,
+      sellOrderId: 1001,
+      buyOrderId: 2001,
+      price: 72500,
+      quantity: 10,
+    },
+    {
+      id: 2,
+      sellOrderId: 1002,
+      buyOrderId: 2002,
+      price: 72300,
+      quantity: 5,
+    },
+    {
+      id: 3,
+      sellOrderId: 1003,
+      buyOrderId: 2003,
+      price: 72600,
+      quantity: 3,
+    },
+  ];
 
-    return () => {
-      unsubscribe(); // 컴포넌트 언마운트 시 구독 해제
-    };
+  useEffect(() => {
+    const unsubscribe = eventbus.subscribe(
+      "newTrade",
+      (newTrade: TradeHistory) => {
+        setTrades((prev) => [newTrade, ...prev]);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    // 더미 거래 내역 데이터
-    const dummyTrades: TradeHistory[] = [
-      {
-        id: 1,
-        sellOrderId: 1001,
-        buyOrderId: 2001,
-        price: 72500,
-        quantity: 10,
-      },
-      {
-        id: 2,
-        sellOrderId: 1002,
-        buyOrderId: 2002,
-        price: 72300,
-        quantity: 5,
-      },
-      {
-        id: 3,
-        sellOrderId: 1003,
-        buyOrderId: 2003,
-        price: 72600,
-        quantity: 3,
-      },
-    ];
-
-    // 1초 후에 데이터 로딩 완료 (로딩 시뮬레이션)
+    // Simulate loading dummy data
     setTimeout(() => {
       setTrades(dummyTrades);
       setIsLoading(false);
     }, 1000);
   }, []);
 
-  const addNewTrade = (newTrade: TradeHistory) => {
-    setTrades((prevTrades) => [newTrade, ...prevTrades]);
-  };
   useEffect(() => {
     const fetchTradeHistory = async () => {
       try {
         setIsLoading(true);
-        const { data } = await axiosInstance.get('/api/order/tradehistory');
-        console.log('Received data:', data);
+        const { data } = await axiosInstance.get(`/api/order/tradehistory`);
+        console.log("Received data:", data);
         setTrades(data);
-      } catch (error) {
-        setError('거래 내역을 불러오는데 실패했습니다.');
-        console.error('Failed to fetch trade history:', error);
+      } catch (err) {
+        console.error("Failed to fetch trade history:", err);
+        setError("거래 내역을 불러오는데 실패했습니다.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchTradeHistory(); // 컴포넌트 마운트 시 1회만 실행
-  }, []); // 빈 의존성 배열
+    fetchTradeHistory();
+  }, []);
 
   if (isLoading) {
-    return <LoadingSpinner>Loading...</LoadingSpinner>;
+    return (
+      <div className="flex justify-center items-center h-full text-gray-400">
+        Loading...
+      </div>
+    );
   }
 
   if (error) {
-    return <ErrorMessage>{error}</ErrorMessage>;
+    return <div className="text-center text-red-500 py-4">{error}</div>;
   }
 
   return (
-    <Container>
-      <Header>
-        <Title>체결 내역</Title>
-        <UpdateTime>
+    <div className="w-[360px] h-[420px] mx-auto my-5 p-6 bg-white rounded-3xl shadow-md flex flex-col font-sans">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold text-gray-800">체결 내역</h2>
+        <span className="text-xs text-gray-400">
           최근 업데이트: {new Date().toLocaleTimeString()}
-        </UpdateTime>
-      </Header>
-      <ScrollableWrapper>
-        <TradeWrapper>
+        </span>
+      </div>
+
+      {/* Scrollable List */}
+      <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+        <div className="flex flex-col gap-4">
           {trades.map((trade) => (
-            <TradeItem key={trade.id}>
-              <TradeHeader>
-                <OrderInfo>
-                  <OrderNumber>#{trade.sellOrderId}</OrderNumber>
-                  <OrderTime>14:30:25</OrderTime>
-                </OrderInfo>
-                <StatusBadge>체결완료</StatusBadge>
-              </TradeHeader>
-              <TradeContent>
-                <PriceInfo>
-                  <Label>체결가격</Label>
-                  <Price>{trade.price?.toLocaleString() ?? '0'}원</Price>
-                </PriceInfo>
-                <QuantityInfo>
-                  <Label>체결수량</Label>
-                  <Quantity>
-                    {trade.quantity?.toLocaleString() ?? '0'}주
-                  </Quantity>
-                </QuantityInfo>
-                <TotalInfo>
-                  <Label>총 체결금액</Label>
-                  <TotalAmount>
+            <div
+              key={trade.id}
+              className="bg-gray-50 rounded-xl p-5 transition hover:bg-gray-100 hover:-translate-y-[1px]"
+            >
+              {/* Trade Header */}
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-700">
+                    #{trade.sellOrderId}
+                  </span>
+                  <span className="text-xs text-gray-400">14:30:25</span>
+                </div>
+                <span className="px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-600 rounded-full">
+                  체결완료
+                </span>
+              </div>
+
+              {/* Trade Content */}
+              <div className="grid grid-cols-3 gap-4 text-sm text-gray-800">
+                <div>
+                  <span className="text-xs text-gray-400 block mb-1">
+                    체결가격
+                  </span>
+                  <span className="font-semibold">
+                    {trade.price?.toLocaleString() ?? "0"}원
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block mb-1">
+                    체결수량
+                  </span>
+                  <span className="font-semibold">
+                    {trade.quantity?.toLocaleString() ?? "0"}주
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block mb-1">
+                    총 체결금액
+                  </span>
+                  <span className="font-semibold">
                     {(
                       (trade.price ?? 0) * (trade.quantity ?? 0)
                     ).toLocaleString()}
                     원
-                  </TotalAmount>
-                </TotalInfo>
-              </TradeContent>
-            </TradeItem>
+                  </span>
+                </div>
+              </div>
+            </div>
           ))}
-        </TradeWrapper>
-      </ScrollableWrapper>
-    </Container>
+        </div>
+      </div>
+    </div>
   );
 };
-
-const Container = styled.div`
-  width: 360px;
-  height: 420px; // 고정 높이 설정
-  margin: 20px auto;
-  background: white;
-  border-radius: 24px;
-  box-shadow: 0 2px 40px rgba(0, 0, 0, 0.05);
-  padding: 24px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
-  display: flex;
-  flex-direction: column;
-`;
-
-const ScrollableWrapper = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: #d1d5db;
-    border-radius: 3px;
-  }
-`;
-
-const LoadingSpinner = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  color: #8b95a1;
-`;
-
-const ErrorMessage = styled.div`
-  color: #ef4444;
-  text-align: center;
-  padding: 20px;
-`;
-
-const Header = styled.div`
-  margin-bottom: 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const Title = styled.h2`
-  font-size: 20px;
-  font-weight: 600;
-  color: #191f28;
-  margin: 0;
-`;
-
-const UpdateTime = styled.span`
-  font-size: 12px;
-  color: #8b95a1;
-`;
-
-const TradeWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding-right: 8px;
-`;
-
-const TradeItem = styled.div`
-  background: #f9fafb;
-  border-radius: 16px;
-  padding: 20px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: #f3f4f6;
-    transform: translateY(-1px);
-  }
-`;
-
-const TradeHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-`;
-
-const OrderInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const OrderNumber = styled.span`
-  font-size: 14px;
-  font-weight: 600;
-  color: #4e5968;
-`;
-
-const OrderTime = styled.span`
-  font-size: 12px;
-  color: #8b95a1;
-`;
-
-const StatusBadge = styled.span`
-  padding: 6px 12px;
-  background: #e7f2ff;
-  color: #2d91ff;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-`;
-
-const TradeContent = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-`;
-
-const Label = styled.span`
-  font-size: 12px;
-  color: #8b95a1;
-  display: block;
-  margin-bottom: 4px;
-`;
-
-const PriceInfo = styled.div``;
-
-const Price = styled.span`
-  font-size: 16px;
-  font-weight: 600;
-  color: #191f28;
-`;
-
-const QuantityInfo = styled.div``;
-
-const Quantity = styled.span`
-  font-size: 16px;
-  font-weight: 600;
-  color: #191f28;
-`;
-
-const TotalInfo = styled.div``;
-
-const TotalAmount = styled.span`
-  font-size: 16px;
-  font-weight: 600;
-  color: #191f28;
-`;
 
 export default TradeHistoryList;

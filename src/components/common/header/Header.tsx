@@ -1,18 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
-import { getBalance } from '../../../services/orderService';
-import Logo from './Logo';
-import SearchBar from './SearchBar';
-import Navigation from './Navigation';
-import UserSection from './UserSection';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { getBalance } from "../../../services/orderService";
+import Logo from "./Logo";
+import SearchBar from "../searchbar/SearchBar";
+import Navigation from "./Navigation";
+import UserSection from "./UserSection";
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
-  
-  const handleHome = () => {
-    navigate("/");
-  }
   const [balance, setBalance] = useState<number>(1000000);
 
   useEffect(() => {
@@ -20,54 +15,21 @@ const Header: React.FC = () => {
     const intervalId = setInterval(() => {
       setBalance(getBalance());
     }, 1000);
-
     return () => clearInterval(intervalId);
   }, []);
 
   return (
-    <HeaderContainer>
-      <HeaderContent>
-
+    <header className="fixed top-0 z-50 w-full h-20 bg-white border-b border-gray-200">
+      <div className="max-w-screen-xl h-full mx-auto px-6 flex items-center justify-between">
         <Logo />
-        
-        <SearchBarSection>
+        <div className="flex-1 flex justify-center items-center">
           <SearchBar />
-        </SearchBarSection>
-        
+        </div>
         <Navigation />
-        
         <UserSection />
-      
-      </HeaderContent>
-    </HeaderContainer>
+      </div>
+    </header>
   );
 };
-
-const HeaderContainer = styled.header`
-  width: 100%;
-  height: 80px; /* 헤더 높이 설정 */
-  background-color: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
-  position: fixed;
-  top: 0;
-  z-index: 100;
-`;
-
-const HeaderContent = styled.div`
-  max-width: 1200px;
-  height: 100%;
-  margin: auto;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const SearchBarSection = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
 
 export default Header;

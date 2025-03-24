@@ -1,6 +1,4 @@
-// src/components/chart/RealTimeChart.tsx
 import React from "react";
-import styled from "styled-components";
 import { CompanySearchResponse } from "../../types/CompanySearchResponse";
 import { useRealTimeChart } from "../../hooks/useRealTimeChart";
 import ChartHeader from "./ChartHeader";
@@ -26,7 +24,7 @@ const RealTimeChart: React.FC<Props> = ({ companyData }) => {
   } = useRealTimeChart(companyData);
 
   return (
-    <ChartContainer>
+    <div className="w-[800px] mx-auto bg-white rounded-xl p-5 shadow-md">
       <ChartHeader
         companyData={companyData}
         selectedTimeFrame={selectedTimeFrame}
@@ -34,9 +32,11 @@ const RealTimeChart: React.FC<Props> = ({ companyData }) => {
       />
 
       {error ? (
-        <Message color="#d32f2f">{error}</Message>
+        <div className="p-10 text-center text-base text-red-600">{error}</div>
       ) : isLoading ? (
-        <Message>차트 데이터를 불러오는 중입니다...</Message>
+        <div className="p-10 text-center text-base text-gray-600">
+          차트 데이터를 불러오는 중입니다...
+        </div>
       ) : (
         <>
           <ChartBody ref={chartContainerRef} />
@@ -50,24 +50,8 @@ const RealTimeChart: React.FC<Props> = ({ companyData }) => {
       )}
 
       <ChartFooter selectedTimeFrame={selectedTimeFrame} />
-    </ChartContainer>
+    </div>
   );
 };
 
 export default RealTimeChart;
-
-const ChartContainer = styled.div`
-  width: 800px;
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin: 0 auto;
-`;
-
-const Message = styled.div<{ color?: string }>`
-  padding: 40px;
-  text-align: center;
-  font-size: 16px;
-  color: ${(props) => props.color || '#666'};
-`;

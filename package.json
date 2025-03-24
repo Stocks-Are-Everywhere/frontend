@@ -7,6 +7,7 @@
     "@canvasjs/react-stockcharts": "^1.0.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@heroicons/react": "^2.2.0",
     "@mui/icons-material": "^6.4.5",
     "@mui/material": "^6.4.7",
     "@stomp/stompjs": "^7.0.0",
@@ -63,9 +64,12 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@types/sockjs-client": "^1.5.4",
+    "autoprefixer": "^10.4.21",
     "concurrently": "^9.1.2",
     "jest-websocket-mock": "^2.5.0",
     "mock-socket": "^9.3.1",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.3.5",
     "ts-node": "^10.9.2"
   }
 }

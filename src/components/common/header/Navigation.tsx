@@ -1,32 +1,18 @@
-import styled from "styled-components";
-
 const Navigation = () => {
   return (
-    <NavSection>
-      <NavItem>홈</NavItem>
-      <NavItem active>주식</NavItem>
-      <NavItem>투자내역</NavItem>
-      <NavItem>자산</NavItem>
-    </NavSection>
+    <nav className="flex gap-2">
+      {["홈", "주식", "투자내역", "자산"].map((label, i) => (
+        <a
+          key={i}
+          className={`text-sm px-2 py-1 transition-all hover:text-gray-900 hover:border-b-2 hover:border-blue-500 ${
+            label === "주식" ? "font-bold text-gray-800" : "text-gray-400 font-medium"
+          }`}
+        >
+          {label}
+        </a>
+      ))}
+    </nav>
   );
 };
-
-const NavSection = styled.nav`
-  display: flex;
-`;
-
-const NavItem = styled.a<{ active?: boolean }>`
-  font-size: 16px;
-  font-weight: ${(props) => (props.active ? "700" : "500")};
-  color: ${(props) => (props.active ? "#333d4b" : "#8b95a1")};
-  text-decoration: none;
-  padding: 8px;
-
-  &:hover {
-    color: #333d4b;
-    border-bottom: 2px solid #3182f6;
-    transition: color 0.3s ease, border-bottom 0.3s ease;
-  }
-`;
 
 export default Navigation;

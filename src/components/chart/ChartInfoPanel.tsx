@@ -1,6 +1,4 @@
-// src/components/chart/ChartInfoPanel.tsx
 import React from "react";
-import styled from "styled-components";
 import { ChartData } from "../../types/chart";
 
 interface Props {
@@ -10,83 +8,57 @@ interface Props {
   priceColor: string;
 }
 
-const ChartInfoPanel: React.FC<Props> = ({ currentCandle, previousCandle, change, priceColor }) => {
+const ChartInfoPanel: React.FC<Props> = ({
+  currentCandle,
+  change,
+  priceColor,
+}) => {
   return (
-    <Wrapper>
-      <Grid>
-        <InfoItem>
-          <Label>현재가</Label>
-          <Value style={{ color: priceColor }}>
+    <div className="mt-5 p-4 bg-gray-100 rounded-lg">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+        {/* 현재가 */}
+        <div className="flex flex-col items-center">
+          <span className="text-xs text-gray-600 mb-1">현재가</span>
+          <span
+            className="text-base font-semibold"
+            style={{ color: priceColor }}
+          >
             {currentCandle?.close?.toLocaleString() ?? "-"}원
-          </Value>
-        </InfoItem>
+          </span>
+        </div>
 
-        <InfoItem>
-          <Label>기준가 대비</Label>
-          <ChangeValue positive={change.value >= 0}>
+        {/* 기준가 대비 */}
+        <div className="flex flex-col items-center">
+          <span className="text-xs text-gray-600 mb-1">기준가 대비</span>
+          <span
+            className={`text-base font-semibold ${
+              change.value >= 0 ? "text-red-500" : "text-blue-500"
+            }`}
+          >
             {change.value >= 0 ? "+" : ""}
             {change.value.toFixed(2)} ({change.value >= 0 ? "+" : ""}
             {change.percent.toFixed(2)}%)
-          </ChangeValue>
-        </InfoItem>
+          </span>
+        </div>
 
-        <InfoItem>
-          <Label>거래량</Label>
-          <Value>
+        {/* 거래량 */}
+        <div className="flex flex-col items-center">
+          <span className="text-xs text-gray-600 mb-1">거래량</span>
+          <span className="text-base font-semibold text-gray-800">
             {currentCandle?.volume?.toLocaleString() ?? "-"}주
-          </Value>
-        </InfoItem>
+          </span>
+        </div>
 
-        <InfoItem>
-          <Label>시가</Label>
-          <Value>
+        {/* 시가 */}
+        <div className="flex flex-col items-center">
+          <span className="text-xs text-gray-600 mb-1">시가</span>
+          <span className="text-base font-semibold text-gray-800">
             {currentCandle?.open?.toLocaleString() ?? "-"}원
-          </Value>
-        </InfoItem>
-      </Grid>
-    </Wrapper>
+          </span>
+        </div>
+      </div>
+    </div>
   );
 };
 
 export default ChartInfoPanel;
-
-const Wrapper = styled.div`
-  margin-top: 20px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-`;
-
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(4, 1fr);
-  }
-`;
-
-const InfoItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const Label = styled.span`
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 5px;
-`;
-
-const Value = styled.span`
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-`;
-
-const ChangeValue = styled.span<{ positive: boolean }>`
-  font-size: 16px;
-  font-weight: 600;
-  color: ${(props) => (props.positive ? '#ef5350' : '#5294f3')};
-`;
