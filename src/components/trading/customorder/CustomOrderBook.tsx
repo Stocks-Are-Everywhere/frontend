@@ -45,7 +45,7 @@ const CustomOrderBook: React.FC<Props> = ({ companyData }) => {
   };
 
   return (
-    <div className="w-[360px] mx-auto p-6 bg-white rounded-3xl shadow-md font-sans">
+    <div className="flex flex-col gap-2">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">주문</h2>
 
       <OrderSideToggle side={side} onChange={setSide} />

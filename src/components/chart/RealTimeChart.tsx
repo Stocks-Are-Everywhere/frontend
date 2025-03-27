@@ -24,7 +24,7 @@ const RealTimeChart: React.FC<Props> = ({ companyData }) => {
   } = useRealTimeChart(companyData);
 
   return (
-    <div className="w-[800px] mx-auto bg-white rounded-xl p-5 shadow-md">
+    <div className="flex flex-col gap-2 h-full">
       <ChartHeader
         companyData={companyData}
         selectedTimeFrame={selectedTimeFrame}
@@ -38,7 +38,7 @@ const RealTimeChart: React.FC<Props> = ({ companyData }) => {
           차트 데이터를 불러오는 중입니다...
         </div>
       ) : (
-        <>
+        <div className="flex flex-col flex-1 overflow-hidden">
           <ChartBody ref={chartContainerRef} />
           <ChartInfoPanel
             currentCandle={currentCandle.current}
@@ -46,7 +46,7 @@ const RealTimeChart: React.FC<Props> = ({ companyData }) => {
             change={change}
             priceColor={getPriceColor()}
           />
-        </>
+        </div>
       )}
 
       <ChartFooter selectedTimeFrame={selectedTimeFrame} />

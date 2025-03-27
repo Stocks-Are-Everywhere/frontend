@@ -13,29 +13,10 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Dummy data
   const dummyTrades: TradeHistory[] = [
-    {
-      id: 1,
-      sellOrderId: 1001,
-      buyOrderId: 2001,
-      price: 72500,
-      quantity: 10,
-    },
-    {
-      id: 2,
-      sellOrderId: 1002,
-      buyOrderId: 2002,
-      price: 72300,
-      quantity: 5,
-    },
-    {
-      id: 3,
-      sellOrderId: 1003,
-      buyOrderId: 2003,
-      price: 72600,
-      quantity: 3,
-    },
+    { id: 1, sellOrderId: 1001, buyOrderId: 2001, price: 72500, quantity: 10 },
+    { id: 2, sellOrderId: 1002, buyOrderId: 2002, price: 72300, quantity: 5 },
+    { id: 3, sellOrderId: 1003, buyOrderId: 2003, price: 72600, quantity: 3 },
   ];
 
   useEffect(() => {
@@ -50,7 +31,6 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
   }, []);
 
   useEffect(() => {
-    // Simulate loading dummy data
     setTimeout(() => {
       setTrades(dummyTrades);
       setIsLoading(false);
@@ -62,7 +42,6 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
       try {
         setIsLoading(true);
         const { data } = await axiosInstance.get(`/api/order/tradehistory`);
-        console.log("Received data:", data);
         setTrades(data);
       } catch (err) {
         console.error("Failed to fetch trade history:", err);
@@ -88,13 +67,15 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
   }
 
   return (
-    <div className="w-[360px] h-[420px] mx-auto my-5 p-6 bg-white rounded-3xl shadow-md flex flex-col font-sans">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">체결 내역</h2>
-        <span className="text-xs text-gray-400">
-          최근 업데이트: {new Date().toLocaleTimeString()}
-        </span>
+      <div className="sticky top-0 z-10 bg-white pb-2">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-800">체결 내역</h2>
+          <span className="text-xs text-gray-400">
+            최근 업데이트: {new Date().toLocaleTimeString()}
+          </span>
+        </div>
       </div>
 
       {/* Scrollable List */}
@@ -141,9 +122,7 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
                     총 체결금액
                   </span>
                   <span className="font-semibold">
-                    {(
-                      (trade.price ?? 0) * (trade.quantity ?? 0)
-                    ).toLocaleString()}
+                    {(trade.price ?? 0 * trade.quantity ?? 0).toLocaleString()}
                     원
                   </span>
                 </div>

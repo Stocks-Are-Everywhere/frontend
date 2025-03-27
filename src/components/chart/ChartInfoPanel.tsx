@@ -14,7 +14,7 @@ const ChartInfoPanel: React.FC<Props> = ({
   priceColor,
 }) => {
   return (
-    <div className="mt-5 p-4 bg-gray-100 rounded-lg">
+    <div className="p-4 bg-gray-100 rounded-lg">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
         {/* 현재가 */}
         <div className="flex flex-col items-center">

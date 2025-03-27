@@ -53,7 +53,7 @@ const OrderBook: React.FC<OrderBookProps> = ({ companyData }) => {
 
   if (!orderBook) {
     return (
-      <div className="w-[360px] mx-auto p-6 bg-white rounded-3xl shadow-md text-center text-gray-400">
+      <div className="w-full p-6 bg-white rounded-3xl shadow-md text-center text-gray-400">
         Loading...
       </div>
     );
@@ -79,7 +79,7 @@ const OrderBook: React.FC<OrderBookProps> = ({ companyData }) => {
   const direction = priceDiff > 0 ? "up" : priceDiff < 0 ? "down" : "neutral";
 
   return (
-    <div className="w-[360px] mx-auto p-6 bg-white rounded-3xl shadow-md font-sans">
+    <div className="flex flex-col gap-2 h-full">
       <OrderHeader code={companyData.isuSrtCd} name={companyData.isuNm} />
 
       {/* Sell Levels (reversed) */}
