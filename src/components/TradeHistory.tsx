@@ -4,6 +4,8 @@ import { TradeHistory } from '../types/tradehistory';
 import axiosInstance from '../api/AxiosInstance';
 import eventbus from '../util/eventbus';
 import { CompanySearchResponse } from '../types/CompanySearchResponse';
+import orderAxiosInstance from '../api/OrderAxiosInstance';
+import { EventSourcePolyfill } from 'event-source-polyfill';
 
 interface OrderBookProps {
   companyData: CompanySearchResponse;
@@ -15,57 +17,57 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 이벤트 구독
-    const unsubscribe = eventbus.subscribe('newTrade', (newTrade) => {
-      setTrades((prevTrades) => [newTrade, ...prevTrades]);
-    });
+    try {
+      if(localStorage.getItem('jwt') != null) {
+        const fetchSse = async () => {
+          const eventSource = new EventSourcePolyfill(
+            `http://localhost:8081/api/histories/stream`,
+            {
+              headers: {
+                "Content-Type": "text/event-stream",
+                "Authorization" : '' + localStorage.getItem('jwt')
+              }
+            }
+          );
+  
+          eventSource.addEventListener("MatchingNotificationDto", (event) => {
+            console.log(event);
+          });
 
-    return () => {
-      unsubscribe(); // 컴포넌트 언마운트 시 구독 해제
-    };
-  }, []);
-
-  useEffect(() => {
-    // 더미 거래 내역 데이터
-    const dummyTrades: TradeHistory[] = [
-      {
-        id: 1,
-        sellOrderId: 1001,
-        buyOrderId: 2001,
-        price: 72500,
-        quantity: 10,
-      },
-      {
-        id: 2,
-        sellOrderId: 1002,
-        buyOrderId: 2002,
-        price: 72300,
-        quantity: 5,
-      },
-      {
-        id: 3,
-        sellOrderId: 1003,
-        buyOrderId: 2003,
-        price: 72600,
-        quantity: 3,
-      },
-    ];
-
-    // 1초 후에 데이터 로딩 완료 (로딩 시뮬레이션)
-    setTimeout(() => {
-      setTrades(dummyTrades);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+          eventSource.onmessage = async (e) => {
+            const res = await e.data;
+            const parsedData = JSON.parse(res);
+      
+            console.log(parsedData);
+            addNewTrade({
+              id: parsedData.id,
+              sellOrderId: parsedData.id,
+              buyOrderId: parsedData.id,
+              quantity: parsedData.quantity,
+              price: parsedData.price,
+            });
+          };
+        };
+        fetchSse();
+      }
+    } catch (error) {
+      throw error;
+  }
+  })
 
   const addNewTrade = (newTrade: TradeHistory) => {
     setTrades((prevTrades) => [newTrade, ...prevTrades]);
   };
+
   useEffect(() => {
     const fetchTradeHistory = async () => {
       try {
         setIsLoading(true);
-        const { data } = await axiosInstance.get('/api/order/tradehistory');
+        const { data } = await orderAxiosInstance.get('/histories', {
+          headers: {
+            'Authorization': localStorage.getItem("jwt")
+          }
+        });
         console.log('Received data:', data);
         setTrades(data);
       } catch (error) {
