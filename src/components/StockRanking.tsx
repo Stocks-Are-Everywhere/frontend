@@ -1,4 +1,3 @@
-// StockRanking.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Table,
@@ -11,18 +10,33 @@ import {
   Tabs,
   Tab,
   Box,
-  Pagination,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import axiosInstance from '../api/AxiosInstance';
 
-interface RankingData {
+// API 응답에서 받는 데이터 형식
+interface TotalTradeAmountDto {
   companyCode: string;
   companyName: string;
-  rank: number;
-  totalVolume?: number;
-  listedShares?: number;
-  turnoverRate?: number;
+  totalAmount: number;
+}
+
+interface TradeAvgPriceDto {
+  companyCode: string;
+  companyName: string;
+  avgPrice: number;
+}
+
+interface TradeCountDto {
+  companyCode: string;
+  companyName: string;
+  count: number;
+}
+
+interface RankingData {
+  totalTradeAmounts: TotalTradeAmountDto[];
+  tradeAvgPrices: TradeAvgPriceDto[];
+  tradeCounts: TradeCountDto[];
 }
 
 interface StockRankingProps {
@@ -37,12 +51,22 @@ const StockRanking: React.FC<StockRankingProps> = ({
   category,
   onCategoryChange,
 }) => {
-  const [rankingData, setRankingData] = useState<RankingData[]>([]);
-  const [page, setPage] = useState(1);
-  const itemsPerPage = 20; // 토스증권은 한 페이지에 더 많은 항목 표시
+  const [rankingData, setRankingData] = useState<RankingData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // 초기 카테고리가 'volume'인 경우 'totalTradeAmounts'로 변경
+  useEffect(() => {
+    if (
+      category === 'volume' ||
+      category === 'listedshares' ||
+      category === 'turnoverrate'
+    ) {
+      onCategoryChange('totalTradeAmounts');
+    }
+  }, [category, onCategoryChange]);
 
   const fetchRankingData = useCallback(async () => {
-    const cachedData = localStorage.getItem(`rankingData_${category}`);
+    const cachedData = localStorage.getItem('rankingData');
     if (cachedData) {
       const { data, timestamp } = JSON.parse(cachedData);
       if (Date.now() - timestamp < CACHE_DURATION) {
@@ -52,10 +76,11 @@ const StockRanking: React.FC<StockRankingProps> = ({
     }
 
     try {
-      const response = await axiosInstance.get(`/api/rankings/${category}`);
+      const response = await axiosInstance.get('/api/rankings');
       setRankingData(response.data);
+      setError(null);
       localStorage.setItem(
-        `rankingData_${category}`,
+        'rankingData',
         JSON.stringify({
           data: response.data,
           timestamp: Date.now(),
@@ -63,8 +88,9 @@ const StockRanking: React.FC<StockRankingProps> = ({
       );
     } catch (error) {
       console.error('랭킹 데이터를 불러오는 데 실패했습니다:', error);
+      setError('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
     }
-  }, [category]);
+  }, []);
 
   useEffect(() => {
     fetchRankingData();
@@ -79,17 +105,37 @@ const StockRanking: React.FC<StockRankingProps> = ({
     onCategoryChange(newCategory);
   };
 
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    value: number
-  ) => {
-    setPage(value);
-  };
+  const getCategoryData = () => {
+    if (!rankingData) return [];
 
-  const paginatedData = rankingData.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage
-  );
+    switch (category) {
+      case 'totalTradeAmounts':
+        return rankingData.totalTradeAmounts
+          .slice(0, 10)
+          .map((item, index) => ({
+            rank: index + 1,
+            companyCode: item.companyCode,
+            companyName: item.companyName,
+            value: item.totalAmount,
+          }));
+      case 'tradeAvgPrices':
+        return rankingData.tradeAvgPrices.slice(0, 10).map((item, index) => ({
+          rank: index + 1,
+          companyCode: item.companyCode,
+          companyName: item.companyName,
+          value: item.avgPrice,
+        }));
+      case 'tradeCounts':
+        return rankingData.tradeCounts.slice(0, 10).map((item, index) => ({
+          rank: index + 1,
+          companyCode: item.companyCode,
+          companyName: item.companyName,
+          value: item.count,
+        }));
+      default:
+        return [];
+    }
+  };
 
   return (
     <RankingContainer>
@@ -100,7 +146,7 @@ const StockRanking: React.FC<StockRankingProps> = ({
         scrollButtons="auto"
         TabIndicatorProps={{ style: { display: 'none' } }}
       >
-        {['volume', 'listedshares', 'turnoverrate'].map((tab) => (
+        {['totalTradeAmounts', 'tradeAvgPrices', 'tradeCounts'].map((tab) => (
           <CategoryTab
             key={tab}
             label={getCategoryName(tab)}
@@ -110,62 +156,63 @@ const StockRanking: React.FC<StockRankingProps> = ({
         ))}
       </CategoryTabs>
 
-      <TableContainer component={StyledPaper} elevation={0}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell width="10%">순위</TableHeaderCell>
-              <TableHeaderCell width="50%">종목</TableHeaderCell>
-              <TableHeaderCell width="40%" align="right">
-                {getCategoryName(category)}
-              </TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedData.map((item) => (
-              <StyledTableRow key={item.companyCode} hover>
-                <RankCell>{item.rank}</RankCell>
-                <StockNameCell>{item.companyName}</StockNameCell>
-                <ValueCell>{getCategoryValue(category, item)}</ValueCell>
-              </StyledTableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <PaginationContainer>
-        <StyledPagination
-          count={Math.ceil(rankingData.length / itemsPerPage)}
-          page={page}
-          onChange={handlePageChange}
-          color="primary"
-          size="small"
-          shape="rounded"
-        />
-      </PaginationContainer>
+      {error ? (
+        <ErrorMessage>{error}</ErrorMessage>
+      ) : (
+        <TableContainer component={StyledPaper} elevation={0}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell width="10%">순위</TableHeaderCell>
+                <TableHeaderCell width="50%">종목</TableHeaderCell>
+                <TableHeaderCell width="40%" align="right">
+                  {getCategoryName(category)}
+                </TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {getCategoryData().map((item) => (
+                <StyledTableRow key={item.companyCode} hover>
+                  <RankCell>{item.rank}</RankCell>
+                  <StockNameCell>{item.companyName}</StockNameCell>
+                  <ValueCell>{formatValue(category, item.value)}</ValueCell>
+                </StyledTableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
     </RankingContainer>
   );
 };
 
 const getCategoryName = (category: string): string => {
   const categoryNames: { [key: string]: string } = {
-    volume: '거래량',
-    listedshares: '상장주식수',
-    turnoverrate: '거래회전율',
+    totalTradeAmounts: '거래대금',
+    tradeAvgPrices: '평균 거래가',
+    tradeCounts: '거래횟수',
   };
   return categoryNames[category] || category;
 };
 
-const getCategoryValue = (category: string, item: RankingData): string => {
+const formatValue = (category: string, value: number): string => {
   switch (category) {
-    case 'volume':
-      return item.totalVolume?.toLocaleString() || '';
-    case 'listedshares':
-      return item.listedShares?.toLocaleString() || '';
-    case 'turnoverrate':
-      return item.turnoverRate ? `${item.turnoverRate.toFixed(2)}%` : '';
+    case 'totalTradeAmounts':
+      // 100만원 기준으로 표시 방식 변경
+      if (value >= 1000000) {
+        return `${parseFloat(
+          (value / 1000000).toFixed(2)
+        ).toLocaleString()}백만원`;
+      } else {
+        return `${Math.round(value).toLocaleString()}원`;
+      }
+    case 'tradeAvgPrices':
+      // 소수점 제거하고 정수로 표시
+      return `${Math.round(value).toLocaleString()}원`;
+    case 'tradeCounts':
+      return value.toLocaleString();
     default:
-      return '';
+      return value.toString();
   }
 };
 
@@ -239,20 +286,12 @@ const ValueCell = styled(TableCell)({
   textAlign: 'right',
 });
 
-const PaginationContainer = styled(Box)({
-  display: 'flex',
-  justifyContent: 'center',
-  marginTop: '16px',
-});
-
-const StyledPagination = styled(Pagination)({
-  '& .MuiPaginationItem-root': {
-    color: '#8b95a1',
-  },
-  '& .Mui-selected': {
-    backgroundColor: '#f2f4f6',
-    color: '#191f28',
-  },
+const ErrorMessage = styled(Box)({
+  padding: '16px',
+  color: '#e53935',
+  textAlign: 'center',
+  fontSize: '14px',
+  fontWeight: 500,
 });
 
 export default StockRanking;

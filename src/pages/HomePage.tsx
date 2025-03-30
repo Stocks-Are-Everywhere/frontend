@@ -12,7 +12,7 @@ const HomePage: React.FC = () => {
       <MainSection>
         <Header>
           <Title>실시간 차트</Title>
-          <Subtitle>오늘 10:15 기준</Subtitle>
+          <Subtitle>전날 기준</Subtitle>
         </Header>
         <StockRanking
           category={rankingCategory}
