@@ -1,17 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Tabs,
-  Tab,
-  Box,
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
+import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/AxiosInstance';
 
 // API 응답에서 받는 데이터 형식
@@ -53,8 +42,8 @@ const StockRanking: React.FC<StockRankingProps> = ({
 }) => {
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  // 초기 카테고리가 'volume'인 경우 'totalTradeAmounts'로 변경
   useEffect(() => {
     if (
       category === 'volume' ||
@@ -98,11 +87,12 @@ const StockRanking: React.FC<StockRankingProps> = ({
     return () => clearInterval(intervalId);
   }, [fetchRankingData]);
 
-  const handleCategoryChange = (
-    event: React.SyntheticEvent,
-    newCategory: string
-  ) => {
+  const handleCategoryChange = (newCategory: string) => {
     onCategoryChange(newCategory);
+  };
+
+  const handleRowClick = (companyCode: string) => {
+    navigate(`/order/${companyCode}`);
   };
 
   const getCategoryData = () => {
@@ -139,28 +129,23 @@ const StockRanking: React.FC<StockRankingProps> = ({
 
   return (
     <RankingContainer>
-      <CategoryTabs
-        value={category}
-        onChange={handleCategoryChange}
-        variant="scrollable"
-        scrollButtons="auto"
-        TabIndicatorProps={{ style: { display: 'none' } }}
-      >
+      <CategoryTabsContainer>
         {['totalTradeAmounts', 'tradeAvgPrices', 'tradeCounts'].map((tab) => (
           <CategoryTab
             key={tab}
-            label={getCategoryName(tab)}
-            value={tab}
-            disableRipple
-          />
+            active={category === tab}
+            onClick={() => handleCategoryChange(tab)}
+          >
+            {getCategoryName(tab)}
+          </CategoryTab>
         ))}
-      </CategoryTabs>
+      </CategoryTabsContainer>
 
       {error ? (
         <ErrorMessage>{error}</ErrorMessage>
       ) : (
-        <TableContainer component={StyledPaper} elevation={0}>
-          <Table size="small">
+        <TableContainer>
+          <Table>
             <TableHead>
               <TableRow>
                 <TableHeaderCell width="10%">순위</TableHeaderCell>
@@ -172,7 +157,10 @@ const StockRanking: React.FC<StockRankingProps> = ({
             </TableHead>
             <TableBody>
               {getCategoryData().map((item) => (
-                <StyledTableRow key={item.companyCode} hover>
+                <StyledTableRow
+                  key={item.companyCode}
+                  onClick={() => handleRowClick(item.companyCode)}
+                >
                   <RankCell>{item.rank}</RankCell>
                   <StockNameCell>{item.companyName}</StockNameCell>
                   <ValueCell>{formatValue(category, item.value)}</ValueCell>
@@ -198,7 +186,6 @@ const getCategoryName = (category: string): string => {
 const formatValue = (category: string, value: number): string => {
   switch (category) {
     case 'totalTradeAmounts':
-      // 100만원 기준으로 표시 방식 변경
       if (value >= 1000000) {
         return `${parseFloat(
           (value / 1000000).toFixed(2)
@@ -207,7 +194,6 @@ const formatValue = (category: string, value: number): string => {
         return `${Math.round(value).toLocaleString()}원`;
       }
     case 'tradeAvgPrices':
-      // 소수점 제거하고 정수로 표시
       return `${Math.round(value).toLocaleString()}원`;
     case 'tradeCounts':
       return value.toLocaleString();
@@ -216,82 +202,100 @@ const formatValue = (category: string, value: number): string => {
   }
 };
 
-const RankingContainer = styled(Box)({
-  width: '100%',
-  backgroundColor: '#ffffff',
-  borderRadius: '14px',
-  boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.05)',
-  padding: '16px',
-  overflow: 'hidden',
-});
+// Styled Components
+const RankingContainer = styled.div`
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 16px;
+  overflow: hidden;
+`;
 
-const CategoryTabs = styled(Tabs)({
-  marginBottom: '16px',
-  borderBottom: '1px solid #f2f4f6',
-  minHeight: '44px',
-});
+const CategoryTabsContainer = styled.div`
+  display: flex;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #f2f4f6;
+`;
 
-const CategoryTab = styled(Tab)({
-  textTransform: 'none',
-  fontSize: '15px',
-  fontWeight: 500,
-  color: '#8b95a1',
-  padding: '12px 16px',
-  minHeight: '44px',
-  '&.Mui-selected': {
-    color: '#3182f6',
-    fontWeight: 700,
-  },
-});
+const CategoryTab = styled.button<{ active: boolean }>`
+  background: none;
+  border: none;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: ${(props) => (props.active ? 700 : 500)};
+  color: ${(props) => (props.active ? '#3182f6' : '#8b95a1')};
+  cursor: pointer;
+  transition: all 0.2s;
 
-const StyledPaper = styled(Paper)({
-  boxShadow: 'none',
-  borderRadius: 0,
-});
+  &:hover {
+    color: #3182f6;
+  }
+`;
 
-const TableHeaderCell = styled(TableCell)({
-  color: '#8b95a1',
-  fontSize: '13px',
-  fontWeight: 500,
-  padding: '12px 16px',
-  borderBottom: '1px solid #f2f4f6',
-});
+const TableContainer = styled.div`
+  width: 100%;
+  overflow-x: auto;
+`;
 
-const StyledTableRow = styled(TableRow)({
-  '&:hover': {
-    backgroundColor: '#f9fafb',
-  },
-  '& td': {
-    borderBottom: '1px solid #f2f4f6',
-    padding: '14px 16px',
-  },
-});
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+`;
 
-const RankCell = styled(TableCell)({
-  fontSize: '14px',
-  color: '#8b95a1',
-  fontWeight: 500,
-});
+const TableHead = styled.thead``;
 
-const StockNameCell = styled(TableCell)({
-  fontSize: '15px',
-  color: '#191f28',
-  fontWeight: 500,
-});
+const TableBody = styled.tbody``;
 
-const ValueCell = styled(TableCell)({
-  fontSize: '15px',
-  color: '#191f28',
-  fontWeight: 600,
-  textAlign: 'right',
-});
+const TableRow = styled.tr``;
 
-const ErrorMessage = styled(Box)({
-  padding: '16px',
-  color: '#e53935',
-  textAlign: 'center',
-  fontSize: '14px',
-  fontWeight: 500,
-});
+const TableHeaderCell = styled.th<{ width?: string; align?: string }>`
+  color: #8b95a1;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f2f4f6;
+  text-align: ${(props) => props.align || 'left'};
+  width: ${(props) => props.width || 'auto'};
+`;
+
+const StyledTableRow = styled.tr`
+  cursor: pointer;
+  &:hover {
+    background-color: #f9fafb;
+  }
+
+  & td {
+    border-bottom: 1px solid #f2f4f6;
+    padding: 14px 16px;
+  }
+`;
+
+const RankCell = styled.td`
+  font-size: 14px;
+  color: #8b95a1;
+  font-weight: 500;
+`;
+
+const StockNameCell = styled.td`
+  font-size: 15px;
+  color: #191f28;
+  font-weight: 500;
+`;
+
+const ValueCell = styled.td`
+  font-size: 15px;
+  color: #191f28;
+  font-weight: 600;
+  text-align: right;
+`;
+
+const ErrorMessage = styled.div`
+  padding: 16px;
+  color: #e53935;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+`;
 
 export default StockRanking;
