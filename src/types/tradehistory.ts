@@ -1,7 +1,8 @@
 export interface TradeHistory {
-  id: number;
-  sellOrderId: number;
-  buyOrderId: number;
-  quantity: number;
+  orderId: number;
+  companyCode: String;
+  type: String;
   price: number;
+  quantity: number;
+  createdAt: String;
 }

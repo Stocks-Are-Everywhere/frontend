@@ -16,6 +16,19 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const convertEpochToKST = (epochTime: number) => {
+    const date = new Date(epochTime); // epochTime이 밀리초 단위여야 합니다.
+  
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  };
+
   useEffect(() => {
     try {
       if(localStorage.getItem('jwt') != null) {
@@ -26,7 +39,8 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
               headers: {
                 "Content-Type": "text/event-stream",
                 "Authorization" : '' + localStorage.getItem('jwt')
-              }
+              },
+              heartbeatTimeout: 60 * 60 * 60 * 60
             }
           );
   
@@ -39,12 +53,14 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
             const parsedData = JSON.parse(res);
       
             console.log(parsedData);
+            console.log(convertEpochToKST(parsedData.createdAt))
             addNewTrade({
-              id: parsedData.id,
-              sellOrderId: parsedData.id,
-              buyOrderId: parsedData.id,
+              orderId: parsedData.orderId,
+              companyCode: parsedData.companyCode,
+              type: parsedData.type,
               quantity: parsedData.quantity,
               price: parsedData.price,
+              createdAt: convertEpochToKST(parsedData.createdAt)
             });
           };
         };
@@ -89,6 +105,10 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
     return <ErrorMessage>{error}</ErrorMessage>;
   }
 
+  const formatDate = (dateString: String) => {
+    return dateString.replace("T", " ").slice(0, 16);
+  };
+
   return (
     <Container>
       <Header>
@@ -100,13 +120,13 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
       <ScrollableWrapper>
         <TradeWrapper>
           {trades.map((trade) => (
-            <TradeItem key={trade.id}>
+            <TradeItem key={`${trade.orderId}-${trade.createdAt}`}>
               <TradeHeader>
                 <OrderInfo>
-                  <OrderNumber>#{trade.sellOrderId}</OrderNumber>
-                  <OrderTime>14:30:25</OrderTime>
+                  <OrderNumber>#{trade.orderId}</OrderNumber>
+                  <OrderTime>{formatDate(trade.createdAt)}</OrderTime>
                 </OrderInfo>
-                <StatusBadge>체결완료</StatusBadge>
+                <StatusBadge>{trade.type.includes("SELL") ? "매도" : "매수"}</StatusBadge>
               </TradeHeader>
               <TradeContent>
                 <PriceInfo>
