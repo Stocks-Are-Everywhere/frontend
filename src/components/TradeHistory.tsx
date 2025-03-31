@@ -4,6 +4,8 @@ import { TradeHistory } from '../types/tradehistory';
 import axiosInstance from '../api/AxiosInstance';
 import eventbus from '../util/eventbus';
 import { CompanySearchResponse } from '../types/CompanySearchResponse';
+import orderAxiosInstance from '../api/OrderAxiosInstance';
+import { EventSourcePolyfill } from 'event-source-polyfill';
 
 interface OrderBookProps {
   companyData: CompanySearchResponse;
@@ -14,58 +16,74 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const convertEpochToKST = (epochTime: number) => {
+    const date = new Date(epochTime); // epochTime이 밀리초 단위여야 합니다.
+  
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  };
+
   useEffect(() => {
-    // 이벤트 구독
-    const unsubscribe = eventbus.subscribe('newTrade', (newTrade) => {
-      setTrades((prevTrades) => [newTrade, ...prevTrades]);
-    });
+    try {
+      if(localStorage.getItem('jwt') != null) {
+        const fetchSse = async () => {
+          const eventSource = new EventSourcePolyfill(
+            `http://localhost:8081/api/histories/stream`,
+            {
+              headers: {
+                "Content-Type": "text/event-stream",
+                "Authorization" : '' + localStorage.getItem('jwt')
+              },
+              heartbeatTimeout: 60 * 60 * 60 * 60
+            }
+          );
+  
+          eventSource.addEventListener("MatchingNotificationDto", (event) => {
+            console.log(event);
+          });
 
-    return () => {
-      unsubscribe(); // 컴포넌트 언마운트 시 구독 해제
-    };
-  }, []);
-
-  useEffect(() => {
-    // 더미 거래 내역 데이터
-    const dummyTrades: TradeHistory[] = [
-      {
-        id: 1,
-        sellOrderId: 1001,
-        buyOrderId: 2001,
-        price: 72500,
-        quantity: 10,
-      },
-      {
-        id: 2,
-        sellOrderId: 1002,
-        buyOrderId: 2002,
-        price: 72300,
-        quantity: 5,
-      },
-      {
-        id: 3,
-        sellOrderId: 1003,
-        buyOrderId: 2003,
-        price: 72600,
-        quantity: 3,
-      },
-    ];
-
-    // 1초 후에 데이터 로딩 완료 (로딩 시뮬레이션)
-    setTimeout(() => {
-      setTrades(dummyTrades);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+          eventSource.onmessage = async (e) => {
+            const res = await e.data;
+            const parsedData = JSON.parse(res);
+      
+            console.log(parsedData);
+            console.log(convertEpochToKST(parsedData.createdAt))
+            addNewTrade({
+              orderId: parsedData.orderId,
+              companyCode: parsedData.companyCode,
+              type: parsedData.type,
+              quantity: parsedData.quantity,
+              price: parsedData.price,
+              createdAt: convertEpochToKST(parsedData.createdAt)
+            });
+          };
+        };
+        fetchSse();
+      }
+    } catch (error) {
+      throw error;
+  }
+  })
 
   const addNewTrade = (newTrade: TradeHistory) => {
     setTrades((prevTrades) => [newTrade, ...prevTrades]);
   };
+
   useEffect(() => {
     const fetchTradeHistory = async () => {
       try {
         setIsLoading(true);
-        const { data } = await axiosInstance.get('/api/order/tradehistory');
+        const { data } = await orderAxiosInstance.get('/histories', {
+          headers: {
+            'Authorization': localStorage.getItem("jwt")
+          }
+        });
         console.log('Received data:', data);
         setTrades(data);
       } catch (error) {
@@ -87,6 +105,10 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
     return <ErrorMessage>{error}</ErrorMessage>;
   }
 
+  const formatDate = (dateString: String) => {
+    return dateString.replace("T", " ").slice(0, 16);
+  };
+
   return (
     <Container>
       <Header>
@@ -98,13 +120,13 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
       <ScrollableWrapper>
         <TradeWrapper>
           {trades.map((trade) => (
-            <TradeItem key={trade.id}>
+            <TradeItem key={`${trade.orderId}-${trade.createdAt}`}>
               <TradeHeader>
                 <OrderInfo>
-                  <OrderNumber>#{trade.sellOrderId}</OrderNumber>
-                  <OrderTime>14:30:25</OrderTime>
+                  <OrderNumber>#{trade.orderId}</OrderNumber>
+                  <OrderTime>{formatDate(trade.createdAt)}</OrderTime>
                 </OrderInfo>
-                <StatusBadge>체결완료</StatusBadge>
+                <StatusBadge>{trade.type.includes("SELL") ? "매도" : "매수"}</StatusBadge>
               </TradeHeader>
               <TradeContent>
                 <PriceInfo>

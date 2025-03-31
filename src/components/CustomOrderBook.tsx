@@ -5,7 +5,8 @@ import { OrderRequest } from '../types/customerorderbook';
 import eventBus from '../util/eventbus';
 import { CompanySearchResponse } from '../types/CompanySearchResponse';
 
-export type OrderSide = 'BUY' | 'SELL';
+export type OrderType = 'BUY' | 'SELL';
+export type OrderSide = 'LIMIT_BUY' | 'LIMIT_SELL' | 'MARKET_BUY' | 'MARKET_SELL';
 export type PriceType = 'limit' | 'market';
 
 interface OrderBookProps {
@@ -13,7 +14,8 @@ interface OrderBookProps {
 }
 
 const CustomOrderBook: React.FC<OrderBookProps> = ({ companyData }) => {
-  const [side, setSide] = useState<OrderSide>('BUY');
+  const [side, setSide] = useState<OrderSide>('LIMIT_BUY');
+  const [type, setType] = useState<OrderType>('BUY');
   const [priceType, setPriceType] = useState<PriceType>('limit');
   const [price, setPrice] = useState<string>('');
   const [quantity, setQuantity] = useState<string>('1'); // 기본값 1로 설정
@@ -28,6 +30,7 @@ const CustomOrderBook: React.FC<OrderBookProps> = ({ companyData }) => {
       setPrice('');
     }
   };
+  const handleTypeChange = (newType: OrderType) => setType(newType);
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -58,15 +61,20 @@ const CustomOrderBook: React.FC<OrderBookProps> = ({ companyData }) => {
     const orderRequest: OrderRequest = {
       companyCode: companyData.isuSrtCd,
       type: side,
-      quantity: parseInt(quantity),
+      totalQuantity: parseInt(quantity),
       price: priceType === 'limit' ? parseInt(price) : 0,
       userId: 1,
     };
 
     try {
-      await submitOrder(orderRequest);
-      setSuccessMessage('주문이 성공적으로 제출되었습니다.');
-      setErrorMessage(null);
+      const response = await submitOrder(orderRequest);
+      if(response.status == 200) {
+        setSuccessMessage('주문이 성공적으로 제출되었습니다.');
+        setErrorMessage(null);
+      } else {
+        setErrorMessage(response.statusText);
+      }
+
 
       eventBus.publish('newTrade', {
         id: Math.floor(Math.random() * 10000),
@@ -98,16 +106,30 @@ const CustomOrderBook: React.FC<OrderBookProps> = ({ companyData }) => {
 
       <ButtonGroup>
         <SideButton
-          active={side === 'BUY'}
+          active={type === 'BUY'}
           $color="#333"
-          onClick={() => handleSideChange('BUY')}
+          onClick={() => {
+            handleTypeChange('BUY')
+            if (priceType === 'limit') {
+              handleSideChange('LIMIT_BUY');
+            } else {
+              handleSideChange('MARKET_BUY');
+            }
+          }}
         >
           구매
         </SideButton>
         <SideButton
-          active={side === 'SELL'}
+          active={type === 'SELL'}
           $color="#2d91ff"
-          onClick={() => handleSideChange('SELL')}
+          onClick={() => {
+            handleTypeChange("SELL")
+            if (priceType === 'limit') {
+              handleSideChange('LIMIT_SELL');
+            } else {
+              handleSideChange('MARKET_SELL');
+            }
+          }}
         >
           판매
         </SideButton>
@@ -117,14 +139,28 @@ const CustomOrderBook: React.FC<OrderBookProps> = ({ companyData }) => {
         <PriceTypeButton
           active={priceType === 'limit'}
           color="#444"
-          onClick={() => handlePriceTypeChange('limit')}
+          onClick={() => {
+            handlePriceTypeChange('limit')
+            if (type === 'BUY') {
+              handleSideChange('LIMIT_BUY');
+            } else {
+              handleSideChange('LIMIT_SELL');
+            }
+          }}
         >
           지정가
         </PriceTypeButton>
         <PriceTypeButton
           active={priceType === 'market'}
           color="#222"
-          onClick={() => handlePriceTypeChange('market')}
+          onClick={() => {
+            handlePriceTypeChange('market')
+            if (type === 'BUY') {
+              handleSideChange('MARKET_BUY');
+            } else {
+              handleSideChange('MARKET_SELL');
+            }
+          }}
         >
           시장가
         </PriceTypeButton>

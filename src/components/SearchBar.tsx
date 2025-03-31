@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/AxiosInstance';
 import { Search as SearchIcon } from '@mui/icons-material';
 import { CompanySearchResponse } from '../types/CompanySearchResponse';
+import userAxiosInstance from '../api/OrderAxiosInstance';
+import orderAxiosInstance from '../api/OrderAxiosInstance';
 
 const SearchBar: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,8 +35,8 @@ const SearchBar: React.FC = () => {
       if (searchTerm.length >= 1) {
         setIsLoading(true);
         try {
-          const response = await axiosInstance.get<CompanySearchResponse[]>(
-            `/api/companies/search?query=${searchTerm}`
+          const response = await orderAxiosInstance.get<CompanySearchResponse[]>(
+            `/companies/search?query=${searchTerm}`
           );
           console.log('검색 결과:', response.data);
 
