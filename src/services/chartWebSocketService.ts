@@ -4,7 +4,7 @@ import SockJS from 'sockjs-client';
 import { ChartUpdateData, ChartResponseDto } from '../types/chart';
 
 // WebSocket 서버 URL - 환경 변수에서 가져오거나 기본값 사용
-const WS_URL = process.env.REACT_APP_WS_URL || 'http://localhost:8080/ws';
+const WS_URL = process.env.REACT_APP_WS_URL || 'http://localhost:8081/ws';
 
 interface StockWebSocketProps {
   symbol: string;

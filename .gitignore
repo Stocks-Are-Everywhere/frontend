@@ -21,9 +21,12 @@
 .DS_Store
 *.pem
 .env.local
-.env.development.local
 .env.test.local
+.env.development.local
 .env.production.local
+.env.development
+.env.production
+.env.test
 .env
 
 # debug

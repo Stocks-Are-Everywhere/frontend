@@ -34,7 +34,7 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
       if(localStorage.getItem('jwt') != null) {
         const fetchSse = async () => {
           const eventSource = new EventSourcePolyfill(
-            `http://localhost:8081/api/histories/stream`,
+            `${process.env.REACT_APP_ORDER_API_URL}/api/histories/stream`,
             {
               headers: {
                 "Content-Type": "text/event-stream",
