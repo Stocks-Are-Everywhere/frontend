@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api/members/google/callback";
+const API_URL = `${process.env.REACT_APP_USER_API_URL}/api/members/google/callback`;
 
 const AuthService = {
   loginWithGoogle: () => {
-    window.location.href = "http://localhost:8080/api/members/google/login";
+    window.location.href = `${process.env.REACT_APP_USER_API_URL}/api/members/google/login`;
   },
 
   logoutGoogle: () => {

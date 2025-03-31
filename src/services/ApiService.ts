@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api";
+const API_URL = `${process.env.REACT_APP_USER_API_URL}/api`;
 
 const ApiService = {
     getSavedStocks: async (): Promise<string[]> => {
@@ -26,7 +26,7 @@ const ApiService = {
 
             if (error.response?.status === 401) {
                 console.warn("Unauthorized request. Redirecting to auth page...");
-                window.location.href = "http://localhost:3000/auth"
+                window.location.href = `${process.env.REACT_APP_CLIENT_URL}/auth`
             }
 
             return []; // Return empty array on error to avoid crashes

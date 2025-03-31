@@ -9,7 +9,7 @@ class WebSocketService<T> {
   private constructor() {
     this.subscriptions = new Map();
     this.client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      webSocketFactory: () => new SockJS(process.env.REACT_APP_WS_URL || 'http://localhost:8081/ws'),
       debug: (str) => {
         console.log(str);
       },

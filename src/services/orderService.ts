@@ -7,7 +7,7 @@ let dummyBalance = 100000000;
 
 export const submitOrder = async (orderRequest: OrderRequest) => {
   const response = await orderAxiosInstance.post<void>(
-    `/order`, orderRequest, {
+    `/api/order`, orderRequest, {
       headers: {
         'Authorization': localStorage.getItem('jwt')
       }
