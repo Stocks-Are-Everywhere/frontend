@@ -8,7 +8,7 @@ const ApiService = {
 
         if (!token) {
             console.warn("JWT token is missing. Redirecting to auth page...");
-            window.location.href = "http://localhost:3000/auth"
+            window.location.href = `${process.env.REACT_APP_CLIENT_URL}/auth`
             return [];
         }
 
