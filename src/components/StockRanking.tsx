@@ -40,8 +40,14 @@ const StockRanking: React.FC<StockRankingProps> = ({
   category,
   onCategoryChange,
 }) => {
-  const [rankingData, setRankingData] = useState<RankingData | null>(null);
+  // 초기 상태를 빈 배열로 설정
+  const [rankingData, setRankingData] = useState<RankingData>({
+    totalTradeAmounts: [],
+    tradeAvgPrices: [],
+    tradeCounts: [],
+  });
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,11 +61,13 @@ const StockRanking: React.FC<StockRankingProps> = ({
   }, [category, onCategoryChange]);
 
   const fetchRankingData = useCallback(async () => {
+    setLoading(true);
     const cachedData = localStorage.getItem('rankingData');
     if (cachedData) {
       const { data, timestamp } = JSON.parse(cachedData);
       if (Date.now() - timestamp < CACHE_DURATION) {
         setRankingData(data);
+        setLoading(false);
         return;
       }
     }
@@ -78,6 +86,8 @@ const StockRanking: React.FC<StockRankingProps> = ({
     } catch (error) {
       console.error('랭킹 데이터를 불러오는 데 실패했습니다:', error);
       setError('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -96,8 +106,6 @@ const StockRanking: React.FC<StockRankingProps> = ({
   };
 
   const getCategoryData = () => {
-    if (!rankingData) return [];
-
     switch (category) {
       case 'totalTradeAmounts':
         return rankingData.totalTradeAmounts
@@ -141,7 +149,12 @@ const StockRanking: React.FC<StockRankingProps> = ({
         ))}
       </CategoryTabsContainer>
 
-      {error ? (
+      {loading ? (
+        <LoadingContainer>
+          <LoadingSpinner />
+          <LoadingText>데이터를 불러오는 중입니다...</LoadingText>
+        </LoadingContainer>
+      ) : error ? (
         <ErrorMessage>{error}</ErrorMessage>
       ) : (
         <TableContainer>
@@ -156,16 +169,27 @@ const StockRanking: React.FC<StockRankingProps> = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {getCategoryData().map((item) => (
-                <StyledTableRow
-                  key={item.companyCode}
-                  onClick={() => handleRowClick(item.companyCode)}
-                >
-                  <RankCell>{item.rank}</RankCell>
-                  <StockNameCell>{item.companyName}</StockNameCell>
-                  <ValueCell>{formatValue(category, item.value)}</ValueCell>
+              {getCategoryData().length > 0 ? (
+                getCategoryData().map((item) => (
+                  <StyledTableRow
+                    key={item.companyCode}
+                    onClick={() => handleRowClick(item.companyCode)}
+                  >
+                    <RankCell>{item.rank}</RankCell>
+                    <StockNameCell>{item.companyName}</StockNameCell>
+                    <ValueCell>{formatValue(category, item.value)}</ValueCell>
+                  </StyledTableRow>
+                ))
+              ) : (
+                <StyledTableRow>
+                  <td
+                    colSpan={3}
+                    style={{ textAlign: 'center', padding: '20px 0' }}
+                  >
+                    전일 거래 내역이 없습니다.
+                  </td>
                 </StyledTableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -296,6 +320,38 @@ const ErrorMessage = styled.div`
   text-align: center;
   font-size: 14px;
   font-weight: 500;
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+`;
+
+const LoadingSpinner = styled.div`
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3182f6;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const LoadingText = styled.p`
+  color: #8b95a1;
+  font-size: 14px;
 `;
 
 export default StockRanking;
