@@ -87,18 +87,22 @@
 ## 🛠️ Tech Stack
 
 ### Frontend
-<img alt="Vercel" src="https://img.shields.io/badge/vercel-000000.svg?&style=for-the-badge&logo=vercel&logoColor=white"/><img alt="React" src="https://img.shields.io/badge/react-61DAFB.svg?&style=for-the-badge&logo=react&logoColor=black"/><img alt="TypeScript" src="https://img.shields.io/badge/typescript-3178C6.svg?&style=for-the-badge&logo=typescript&logoColor=white"/><img alt="KIS OpenAPI" src="https://img.shields.io/badge/KIS_OpenAPI-FF4438.svg?&style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white"/>
+<img alt="React" src="https://img.shields.io/badge/react-61DAFB.svg?&style=for-the-badge&logo=react&logoColor=black"/><img alt="TypeScript" src="https://img.shields.io/badge/typescript-3178C6.svg?&style=for-the-badge&logo=typescript&logoColor=white"/><img alt="KIS OpenAPI" src="https://img.shields.io/badge/KIS_OpenAPI-FF4438.svg?&style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+&logoColor=white"/>
 
 <br>
 
 ### Backend
-<img alt="Spring" src="https://img.shields.io/badge/spring-6DB33F.svg?&style=for-the-badge&logo=spring&logoColor=white"/><img alt="Spring Boot" src="https://img.shields.io/badge/spring_boot-6DB33F.svg?&style=for-the-badge&logo=springboot&logoColor=white"/><img alt="MySQL" src="https://img.shields.io/badge/mysql-4479A1.svg?&style=for-the-badge&logo=mysql&logoColor=white"/><img alt="JPA" src="https://img.shields.io/badge/jpa-6DB33F.svg?&style=for-the-badge&logo=hibernate&logoColor=white"/>
-<img alt="gRPC" src="https://img.shields.io/badge/grpc-4285F4.svg?&style=for-the-badge&logo=google&logoColor=white"/><img alt="RabbitMQ" src="https://img.shields.io/badge/rabbitmq-FF6600.svg?&style=for-the-badge&logo=rabbitmq&logoColor=white"/><img alt="JWT" src="https://img.shields.io/badge/jwt-000000.svg?&style=for-the-badge&logo=jsonwebtokens&logoColor=white"/><img alt="Docker" src="https://img.shields.io/badge/docker-2496ED.svg?&style=for-the-badge&logo=docker&logoColor=white"/>
-<img alt="Event-Driven" src="https://img.shields.io/badge/Event_Driven-FF4438.svg?&style=for-the-badge&logo=apachekafka&logoColor=white"/>
+<img alt="Spring" src="https://img.shields.io/badge/spring-6DB33F.svg?&style=for-the-badge&logo=spring&logoColor=white"/><img alt="Spring Boot" src="https://img.shields.io/badge/spring_boot-6DB33F.svg?&style=for-the-badge&logo=springboot&logoColor=white"/><img alt="JPA" src="https://img.shields.io/badge/jpa-6DB33F.svg?&style=for-the-badge&logo=hibernate&logoColor=white"/><img alt="MySQL" src="https://img.shields.io/badge/mysql-4479A1.svg?&style=for-the-badge&logo=mysql&logoColor=white"/>
+<img alt="gRPC" src="https://img.shields.io/badge/grpc-4285F4.svg?&style=for-the-badge&logo=google&logoColor=white"/><img alt="RabbitMQ" src="https://img.shields.io/badge/rabbitmq-FF6600.svg?&style=for-the-badge&logo=rabbitmq&logoColor=white"/><img alt="JWT" src="https://img.shields.io/badge/jwt-000000.svg?&style=for-the-badge&logo=jsonwebtokens&logoColor=white"/><img alt="Event-Driven" src="https://img.shields.io/badge/Event_Driven-FF4438.svg?&style=for-the-badge&logo=apachekafka&logoColor=white"/>
 
 <br>
 
-### Tool
+### Infrastructure
+<img alt="AWS" src="https://img.shields.io/badge/aws-232F3E.svg?&style=for-the-badge&logo=amazonaws&logoColor=white"/><img alt="Docker" src="https://img.shields.io/badge/docker-2496ED.svg?&style=for-the-badge&logo=docker&logoColor=white"/><img alt="Vercel" src="https://img.shields.io/badge/vercel-000000.svg?&style=for-the-badge&logo=vercel&logoColor=white"/>
+
+<br>
+
+### Collaboration Tools
 <img alt="Discord" src="https://img.shields.io/badge/discord-5865F2.svg?&style=for-the-badge&logo=discord&logoColor=white"/><img alt="Notion" src="https://img.shields.io/badge/notion-000000.svg?&style=for-the-badge&logo=notion&logoColor=white"/><img alt="GitHub" src="https://img.shields.io/badge/github-181717.svg?&style=for-the-badge&logo=github&logoColor=white"/>
 
 
