@@ -13,51 +13,60 @@ const TradingPage: React.FC = () => {
   const { companyCode } = useParams<{ companyCode: string }>();
   const location = useLocation();
 
-  // location.state에서 선택된 회사 정보 가져오기
-  const initialCompany = location.state?.selectedCompany as
-    | CompanySearchResponse
-    | undefined;
+  // // location.state에서 선택된 회사 정보 가져오기
+  // const initialCompany = location.state?.selectedCompany as
+  //   | CompanySearchResponse
+  //   | undefined;
 
-  const [company, setCompany] = useState<CompanySearchResponse | null>(
-    initialCompany || null
-  );
-  const [loading, setLoading] = useState<boolean>(!initialCompany);
+  // const [company, setCompany] = useState<CompanySearchResponse | null>(
+  //   initialCompany || null
+  // );
+  // const [loading, setLoading] = useState<boolean>(!initialCompany);
 
-  useEffect(() => {
-    // 이미 회사 정보가 있고 코드가 일치하면 API 호출 건너뛰기
-    if (initialCompany && initialCompany.isuSrtCd === companyCode) {
-      setCompany(initialCompany);
-      setLoading(false);
-      return;
-    }
+  // useEffect(() => {
+  //   // 이미 회사 정보가 있고 코드가 일치하면 API 호출 건너뛰기
+  //   if (initialCompany && initialCompany.isuSrtCd === companyCode) {
+  //     setCompany(initialCompany);
+  //     setLoading(false);
+  //     return;
+  //   }
 
-    const fetchCompanyInfo = async () => {
-      if (companyCode) {
-        try {
-          setLoading(true);
-          // 회사 코드로 회사 정보 조회
-          const response = await axiosInstance.get<CompanySearchResponse>(
-            `/api/companies/${companyCode}`
-          );
-          setCompany(response.data);
-        } catch (error) {
-          console.error('회사 정보 조회 실패:', error);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
+  //   const fetchCompanyInfo = async () => {
+  //     if (companyCode) {
+  //       try {
+  //         setLoading(true);
+  //         // 회사 코드로 회사 정보 조회
+  //         const response = await axiosInstance.get<CompanySearchResponse>(
+  //           `/api/companies/${companyCode}`
+  //         );
+  //         setCompany(response.data);
+  //       } catch (error) {
+  //         console.error('회사 정보 조회 실패:', error);
+  //       } finally {
+  //         setLoading(false);
+  //       }
+  //     }
+  //   };
 
-    fetchCompanyInfo();
-  }, [companyCode, initialCompany]);
+  //   fetchCompanyInfo();
+  // }, [companyCode, initialCompany]);
 
-  if (loading) {
-    return <LoadingContainer>로딩 중...</LoadingContainer>;
-  }
+  // if (loading) {
+  //   return <LoadingContainer>로딩 중...</LoadingContainer>;
+  // }
 
-  if (!company) {
-    return <ErrorContainer>회사 정보를 찾을 수 없습니다.</ErrorContainer>;
-  }
+  // if (!company) {
+  //   return <ErrorContainer>회사 정보를 찾을 수 없습니다.</ErrorContainer>;
+  // }
+
+  //하드코딩
+  const company = {
+    isuNm: "삼성전자",          // 종목명
+    isuSrtCd: "005930",        // 단축코드
+    isuAbbrv: "삼성전자",       // 종목 약어
+    isuEngNm: "Samsung Electronics",  // 영문 종목명
+    kindStkcertTpNm: "보통주"   // 주식종류
+  };
 
   return (
     <PageContainer>
