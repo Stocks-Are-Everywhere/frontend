@@ -48,6 +48,7 @@ const StockRanking: React.FC<StockRankingProps> = ({
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [dataReady, setDataReady] = useState<boolean>(false); // 데이터 준비 상태 추가
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,30 +63,57 @@ const StockRanking: React.FC<StockRankingProps> = ({
 
   const fetchRankingData = useCallback(async () => {
     setLoading(true);
+    setDataReady(false); // 데이터 로딩 시작 시 준비 상태 false로 설정
+
     const cachedData = localStorage.getItem('rankingData');
     if (cachedData) {
-      const { data, timestamp } = JSON.parse(cachedData);
-      if (Date.now() - timestamp < CACHE_DURATION) {
-        setRankingData(data);
-        setLoading(false);
-        return;
+      try {
+        const { data, timestamp } = JSON.parse(cachedData);
+        if (
+          Date.now() - timestamp < CACHE_DURATION &&
+          data &&
+          data.totalTradeAmounts &&
+          data.tradeAvgPrices &&
+          data.tradeCounts
+        ) {
+          setRankingData(data);
+          setDataReady(true); // 캐시 데이터가 유효하면 준비 상태 true로 설정
+          setLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.error('캐시된 데이터 파싱 오류:', e);
+        localStorage.removeItem('rankingData'); // 손상된 캐시 제거
       }
     }
 
     try {
       const response = await axiosInstance.get('/api/rankings');
-      setRankingData(response.data);
-      setError(null);
-      localStorage.setItem(
-        'rankingData',
-        JSON.stringify({
-          data: response.data,
-          timestamp: Date.now(),
-        })
-      );
+      if (
+        response &&
+        response.data &&
+        response.data.totalTradeAmounts &&
+        response.data.tradeAvgPrices &&
+        response.data.tradeCounts
+      ) {
+        setRankingData(response.data);
+        setError(null);
+        setDataReady(true); // API 응답이 유효하면 준비 상태 true로 설정
+
+        localStorage.setItem(
+          'rankingData',
+          JSON.stringify({
+            data: response.data,
+            timestamp: Date.now(),
+          })
+        );
+      } else {
+        throw new Error('API 응답 형식이 올바르지 않습니다.');
+      }
     } catch (error) {
       console.error('랭킹 데이터를 불러오는 데 실패했습니다:', error);
       setError('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      setDataReady(false); // 오류 발생 시 준비 상태 false로 유지
     } finally {
       setLoading(false);
     }
@@ -106,32 +134,46 @@ const StockRanking: React.FC<StockRankingProps> = ({
   };
 
   const getCategoryData = () => {
-    switch (category) {
-      case 'totalTradeAmounts':
-        return rankingData.totalTradeAmounts
-          .slice(0, 10)
-          .map((item, index) => ({
-            rank: index + 1,
-            companyCode: item.companyCode,
-            companyName: item.companyName,
-            value: item.totalAmount,
-          }));
-      case 'tradeAvgPrices':
-        return rankingData.tradeAvgPrices.slice(0, 10).map((item, index) => ({
-          rank: index + 1,
-          companyCode: item.companyCode,
-          companyName: item.companyName,
-          value: item.avgPrice,
-        }));
-      case 'tradeCounts':
-        return rankingData.tradeCounts.slice(0, 10).map((item, index) => ({
-          rank: index + 1,
-          companyCode: item.companyCode,
-          companyName: item.companyName,
-          value: item.count,
-        }));
-      default:
-        return [];
+    if (!dataReady || !rankingData) return []; // 데이터가 준비되지 않았으면 빈 배열 반환
+
+    try {
+      switch (category) {
+        case 'totalTradeAmounts':
+          return rankingData.totalTradeAmounts &&
+            Array.isArray(rankingData.totalTradeAmounts)
+            ? rankingData.totalTradeAmounts.slice(0, 10).map((item, index) => ({
+                rank: index + 1,
+                companyCode: item.companyCode,
+                companyName: item.companyName,
+                value: item.totalAmount,
+              }))
+            : [];
+        case 'tradeAvgPrices':
+          return rankingData.tradeAvgPrices &&
+            Array.isArray(rankingData.tradeAvgPrices)
+            ? rankingData.tradeAvgPrices.slice(0, 10).map((item, index) => ({
+                rank: index + 1,
+                companyCode: item.companyCode,
+                companyName: item.companyName,
+                value: item.avgPrice,
+              }))
+            : [];
+        case 'tradeCounts':
+          return rankingData.tradeCounts &&
+            Array.isArray(rankingData.tradeCounts)
+            ? rankingData.tradeCounts.slice(0, 10).map((item, index) => ({
+                rank: index + 1,
+                companyCode: item.companyCode,
+                companyName: item.companyName,
+                value: item.count,
+              }))
+            : [];
+        default:
+          return [];
+      }
+    } catch (error) {
+      console.error('데이터 처리 중 오류 발생:', error);
+      return [];
     }
   };
 
@@ -156,6 +198,10 @@ const StockRanking: React.FC<StockRankingProps> = ({
         </LoadingContainer>
       ) : error ? (
         <ErrorMessage>{error}</ErrorMessage>
+      ) : !dataReady ? (
+        <ErrorMessage>
+          데이터를 불러올 수 없습니다. 새로고침 해주세요.
+        </ErrorMessage>
       ) : (
         <TableContainer>
           <Table>
