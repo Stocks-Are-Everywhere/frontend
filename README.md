@@ -60,12 +60,12 @@
 
 ## 🔍 Detailed Implementation
 
-| Feature / Module       | Description                                                    | Link |
-|------------------------|----------------------------------------------------------------|------|
-| Order-service          | 주문 접수, 주문 검증, 주문 내역, 체결 내역       | [View Code](https://github.com/Stocks-Are-Everywhere/order-service) |
-| Matching-service       | 인메모리 기반 주문 저장 및 체결                 | [View Code](https://github.com/Stocks-Are-Everywhere/matching-service) |
-| User-service           | 구글 로그인 기반 로그인 회원, 계좌, 보유 주식    | [View Code](https://github.com/Stocks-Are-Everywhere/user-service) |
-| Frontend               | Frontend                                      | [View Code](https://github.com/Stocks-Are-Everywhere/frontend) |
+| Feature / Module       | Description                                    | Link |
+|------------------------|------------------------------------------------|------|
+| Order-service          | 주문 접수, 주문 검증, 주문 내역, 체결 내역        | [View Code](https://github.com/Stocks-Are-Everywhere/order-service) |
+| Matching-service       | 인메모리 기반 주문 저장 및 체결                  | [View Code](https://github.com/Stocks-Are-Everywhere/matching-service) |
+| User-service           | 구글 로그인 기반 로그인 회원, 계좌, 보유 주식     | [View Code](https://github.com/Stocks-Are-Everywhere/user-service) |
+| Frontend               | 검색, 차트, 호가창, 랭킹                         | [View Code](https://github.com/Stocks-Are-Everywhere/frontend) |
 
 ---
 
