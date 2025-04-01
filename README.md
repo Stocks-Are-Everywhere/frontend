@@ -58,20 +58,6 @@
 
 ---
 
-## 🧩 Detailed Roles
-
-| Contributor     | Responsibilities |
-|-----------------|------------------|
-| **이혜민**    | Developed frontend components, integrated API calls, and ensured responsive UI using React & Tailwind CSS. |
-| **김연진**    | Built and maintained RESTful APIs, handled database schema design using PostgreSQL. |
-| **추호성**    | Set up CI/CD pipelines, Dockerized the application, and handled deployment. |
-| **신창혁**    | Oversaw project timeline, coordinated between team members, and managed backlog in Notion. |
-| **정우용**    | Designed UI/UX prototypes, brand assets, and ensured accessibility and visual consistency. |
-| **박지호**    | Wrote unit and integration tests, ensured quality assurance before deployment. |
-| **배재유**    | Designed and maintained ETL pipelines, processed datasets, and integrated analytics. |
-
----
-
 ## 🔍 Detailed Implementation
 
 | Feature / Module      | Contributor(s)               | Description                                                    | Link |
