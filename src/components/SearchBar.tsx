@@ -1,11 +1,8 @@
-// SearchBar.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../api/AxiosInstance';
 import { Search as SearchIcon } from '@mui/icons-material';
 import { CompanySearchResponse } from '../types/CompanySearchResponse';
-import userAxiosInstance from '../api/OrderAxiosInstance';
 import orderAxiosInstance from '../api/OrderAxiosInstance';
 
 const SearchBar: React.FC = () => {
@@ -13,6 +10,7 @@ const SearchBar: React.FC = () => {
   const [results, setResults] = useState<CompanySearchResponse[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -34,17 +32,40 @@ const SearchBar: React.FC = () => {
     const fetchResults = async () => {
       if (searchTerm.length >= 1) {
         setIsLoading(true);
-        try {
-          const response = await orderAxiosInstance.get<CompanySearchResponse[]>(
-            `/companies/search?query=${searchTerm}`
-          );
-          console.log('검색 결과:', response.data);
+        setError(null);
 
-          setResults(response.data);
+        try {
+          const response = await orderAxiosInstance.get<any>(
+            `/api/companies/search?query=${searchTerm}`
+          );
+
+          // 응답 데이터 검증
+          if (response && response.data) {
+            // 응답이 배열인지 확인
+            if (Array.isArray(response.data)) {
+              setResults(response.data);
+            } else if (
+              response.data.content &&
+              Array.isArray(response.data.content)
+            ) {
+              // 응답이 { content: [...] } 형태인 경우
+              setResults(response.data.content);
+            } else {
+              // 응답이 배열이 아닌 경우 빈 배열로 설정
+              console.error('API 응답이 배열 형식이 아닙니다:', response.data);
+              setResults([]);
+              setError('검색 결과를 불러올 수 없습니다.');
+            }
+          } else {
+            setResults([]);
+          }
+
+          console.log('검색 결과:', response.data);
           setIsOpen(true);
         } catch (error) {
           console.error('Error fetching search results:', error);
           setResults([]);
+          setError('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
         } finally {
           setIsLoading(false);
         }
@@ -67,11 +88,6 @@ const SearchBar: React.FC = () => {
       state: { selectedCompany: company },
     });
 
-    // 홈 페이지로 이동하면서 회사 정보 전달하려면 아래 코드 사용
-    // navigate('/', {
-    //   state: { selectedCompany: company }
-    // });
-
     setIsOpen(false);
     setSearchTerm('');
   };
@@ -80,6 +96,37 @@ const SearchBar: React.FC = () => {
     if (e.key === 'Enter' && results.length > 0) {
       handleResultClick(results[0]); // 첫 번째 검색 결과 선택
     }
+  };
+
+  // 안전하게 map 함수 사용
+  const renderResults = () => {
+    if (!Array.isArray(results)) {
+      return <NoResults>검색 결과를 불러올 수 없습니다.</NoResults>;
+    }
+
+    if (results.length === 0) {
+      return <NoResults>검색 결과가 없습니다.</NoResults>;
+    }
+
+    return results.map((result) => (
+      <ResultItem
+        key={result.isuSrtCd}
+        onClick={() => handleResultClick(result)}
+      >
+        <StockInfo>
+          <StockNameRow>
+            <StockName>{result.isuNm}</StockName>
+            {result.isuEngNm && <StockEngName>{result.isuEngNm}</StockEngName>}
+          </StockNameRow>
+          <StockMeta>
+            <StockCode>{result.isuSrtCd}</StockCode>
+            {result.kindStkcertTpNm && (
+              <MarketType>{result.kindStkcertTpNm}</MarketType>
+            )}
+          </StockMeta>
+        </StockInfo>
+      </ResultItem>
+    ));
   };
 
   return (
@@ -105,31 +152,11 @@ const SearchBar: React.FC = () => {
         <ResultsDropdown>
           {isLoading ? (
             <LoadingMessage>검색 중...</LoadingMessage>
-          ) : results.length > 0 ? (
-            results.map((result) => (
-              <ResultItem
-                key={result.isuSrtCd}
-                onClick={() => handleResultClick(result)}
-              >
-                <StockInfo>
-                  <StockNameRow>
-                    <StockName>{result.isuNm}</StockName>
-                    {result.isuEngNm && (
-                      <StockEngName>{result.isuEngNm}</StockEngName>
-                    )}
-                  </StockNameRow>
-                  <StockMeta>
-                    <StockCode>{result.isuSrtCd}</StockCode>
-                    {result.kindStkcertTpNm && (
-                      <MarketType>{result.kindStkcertTpNm}</MarketType>
-                    )}
-                  </StockMeta>
-                </StockInfo>
-              </ResultItem>
-            ))
-          ) : searchTerm ? (
-            <NoResults>검색 결과가 없습니다.</NoResults>
-          ) : null}
+          ) : error ? (
+            <ErrorMessage>{error}</ErrorMessage>
+          ) : (
+            renderResults()
+          )}
         </ResultsDropdown>
       )}
     </SearchContainer>
@@ -277,6 +304,14 @@ const LoadingMessage = styled.div`
   text-align: center;
   font-size: 14px;
   color: #8b95a1;
+`;
+
+const ErrorMessage = styled.div`
+  padding: 16px;
+  color: #e53935;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
 `;
 
 export default SearchBar;
