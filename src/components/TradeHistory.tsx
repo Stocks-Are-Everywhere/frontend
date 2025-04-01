@@ -12,102 +12,102 @@ interface OrderBookProps {
 }
 
 const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
-  const [trades, setTrades] = useState<TradeHistory[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+//   const [trades, setTrades] = useState<TradeHistory[]>([]);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
 
-  const convertEpochToKST = (epochTime: number) => {
-    const date = new Date(epochTime); // epochTime이 밀리초 단위여야 합니다.
+//   const convertEpochToKST = (epochTime: number) => {
+//     const date = new Date(epochTime); // epochTime이 밀리초 단위여야 합니다.
   
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
+//     const year = date.getFullYear();
+//     const month = String(date.getMonth() + 1).padStart(2, '0');
+//     const day = String(date.getDate()).padStart(2, '0');
+//     const hours = String(date.getHours()).padStart(2, '0');
+//     const minutes = String(date.getMinutes()).padStart(2, '0');
+//     const seconds = String(date.getSeconds()).padStart(2, '0');
   
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-  };
+//     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+//   };
 
-  useEffect(() => {
-    try {
-      if(localStorage.getItem('jwt') != null) {
-        const fetchSse = async () => {
-          const eventSource = new EventSourcePolyfill(
-            `${process.env.REACT_APP_ORDER_API_URL}/api/histories/stream`,
-            {
-              headers: {
-                "Content-Type": "text/event-stream",
-                "Authorization" : '' + localStorage.getItem('jwt')
-              },
-              heartbeatTimeout: 60 * 60 * 60 * 60
-            }
-          );
+//   useEffect(() => {
+//     try {
+//       if(localStorage.getItem('jwt') != null) {
+//         const fetchSse = async () => {
+//           const eventSource = new EventSourcePolyfill(
+//             `http://localhost:8081/api/histories/stream`,
+//             {
+//               headers: {
+//                 "Content-Type": "text/event-stream",
+//                 "Authorization" : '' + localStorage.getItem('jwt')
+//               },
+//               heartbeatTimeout: 60 * 60 * 60 * 60
+//             }
+//           );
   
-          eventSource.addEventListener("MatchingNotificationDto", (event) => {
-            console.log(event);
-          });
+//           eventSource.addEventListener("MatchingNotificationDto", (event) => {
+//             console.log(event);
+//           });
 
-          eventSource.onmessage = async (e) => {
-            const res = await e.data;
-            const parsedData = JSON.parse(res);
+//           eventSource.onmessage = async (e) => {
+//             const res = await e.data;
+//             const parsedData = JSON.parse(res);
       
-            console.log(parsedData);
-            console.log(convertEpochToKST(parsedData.createdAt))
-            addNewTrade({
-              orderId: parsedData.orderId,
-              companyCode: parsedData.companyCode,
-              type: parsedData.type,
-              quantity: parsedData.quantity,
-              price: parsedData.price,
-              createdAt: convertEpochToKST(parsedData.createdAt)
-            });
-          };
-        };
-        fetchSse();
-      }
-    } catch (error) {
-      throw error;
-  }
-  })
+//             console.log(parsedData);
+//             console.log(convertEpochToKST(parsedData.createdAt))
+//             addNewTrade({
+//               orderId: parsedData.orderId,
+//               companyCode: parsedData.companyCode,
+//               type: parsedData.type,
+//               quantity: parsedData.quantity,
+//               price: parsedData.price,
+//               createdAt: convertEpochToKST(parsedData.createdAt)
+//             });
+//           };
+//         };
+//         fetchSse();
+//       }
+//     } catch (error) {
+//       throw error;
+//   }
+//   })
 
-  const addNewTrade = (newTrade: TradeHistory) => {
-    setTrades((prevTrades) => [newTrade, ...prevTrades]);
-  };
+//   const addNewTrade = (newTrade: TradeHistory) => {
+//     setTrades((prevTrades) => [newTrade, ...prevTrades]);
+//   };
 
-  useEffect(() => {
-    const fetchTradeHistory = async () => {
-      try {
-        setIsLoading(true);
-        const { data } = await orderAxiosInstance.get('/histories', {
-          headers: {
-            'Authorization': localStorage.getItem("jwt")
-          }
-        });
-        console.log('Received data:', data);
-        setTrades(data);
-      } catch (error) {
-        setError('거래 내역을 불러오는데 실패했습니다.');
-        console.error('Failed to fetch trade history:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+//   useEffect(() => {
+//     const fetchTradeHistory = async () => {
+//       try {
+//         setIsLoading(true);
+//         const { data } = await orderAxiosInstance.get('/histories', {
+//           headers: {
+//             'Authorization': localStorage.getItem("jwt")
+//           }
+//         });
+//         console.log('Received data:', data);
+//         setTrades(data);
+//       } catch (error) {
+//         setError('거래 내역을 불러오는데 실패했습니다.');
+//         console.error('Failed to fetch trade history:', error);
+//       } finally {
+//         setIsLoading(false);
+//       }
+//     };
 
-    fetchTradeHistory(); // 컴포넌트 마운트 시 1회만 실행
-  }, []); // 빈 의존성 배열
+//     fetchTradeHistory(); // 컴포넌트 마운트 시 1회만 실행
+//   }, []); // 빈 의존성 배열
 
-  if (isLoading) {
-    return <LoadingSpinner>Loading...</LoadingSpinner>;
-  }
+//   if (isLoading) {
+//     return <LoadingSpinner>Loading...</LoadingSpinner>;
+//   }
 
-  if (error) {
-    return <ErrorMessage>{error}</ErrorMessage>;
-  }
+//   if (error) {
+//     return <ErrorMessage>{error}</ErrorMessage>;
+//   }
 
-  const formatDate = (dateString: String) => {
-    return dateString.replace("T", " ").slice(0, 16);
-  };
+//   const formatDate = (dateString: String) => {
+//     return dateString.replace("T", " ").slice(0, 16);
+//   };
 
   return (
     <Container>
@@ -118,7 +118,7 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
         </UpdateTime>
       </Header>
       <ScrollableWrapper>
-        <TradeWrapper>
+        {/* <TradeWrapper>
           {trades.map((trade) => (
             <TradeItem key={`${trade.orderId}-${trade.createdAt}`}>
               <TradeHeader>
@@ -151,7 +151,7 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
               </TradeContent>
             </TradeItem>
           ))}
-        </TradeWrapper>
+        </TradeWrapper> */}
       </ScrollableWrapper>
     </Container>
   );
