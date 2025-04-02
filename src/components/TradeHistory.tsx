@@ -79,7 +79,7 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
     const fetchTradeHistory = async () => {
       try {
         setIsLoading(true);
-        const { data } = await orderAxiosInstance.get('/histories', {
+        const { data } = await orderAxiosInstance.get('/api/histories', {
           headers: {
             'Authorization': localStorage.getItem("jwt")
           }
@@ -119,7 +119,7 @@ const TradeHistoryList: React.FC<OrderBookProps> = ({ companyData }) => {
       </Header>
       <ScrollableWrapper>
         <TradeWrapper>
-          {trades.map((trade) => (
+          {Array.isArray(trades) &&trades.map((trade) => (
             <TradeItem key={`${trade.orderId}-${trade.createdAt}`}>
               <TradeHeader>
                 <OrderInfo>
