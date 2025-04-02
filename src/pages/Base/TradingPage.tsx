@@ -59,6 +59,7 @@ const TradingPage: React.FC = () => {
     return <ErrorContainer>회사 정보를 찾을 수 없습니다.</ErrorContainer>;
   }
 
+
   return (
     <PageContainer>
       <CompanyHeader>
