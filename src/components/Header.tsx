@@ -42,10 +42,10 @@ const Header: React.FC = () => {
 
         <UserSection>
           
-          <Balance>
+          {/* <Balance>
             <BalanceLabel>투자자산</BalanceLabel>
-            {/* <BalanceAmount>{balance.toLocaleString()}원</BalanceAmount> */}
-          </Balance>
+            <BalanceAmount>{balance.toLocaleString()}원</BalanceAmount>
+          </Balance> */}
         
           <ProfileMenu />
         
